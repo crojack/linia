@@ -2086,20 +2086,44 @@ sub open_project {
     
     if ($dialog->run() eq 'accept') {
         my $filename = $dialog->get_filename();
+        
+        print "DEBUG: Opening project file: $filename\n";
 
         local $/; 
         open(my $fh, '<', $filename) or die "Cannot open file: $!";
         my $json_text = <$fh>;
         close $fh;
         
+        print "DEBUG: JSON text length: " . length($json_text) . " bytes\n";
+        
         my $data = eval { from_json($json_text) };
         
+        if ($@) {
+            print "DEBUG: ERROR parsing JSON: $@\n";
+            my $error_dialog = Gtk3::MessageDialog->new($window, 'modal', 'error', 'ok', 
+                "Error loading project:\n$@");
+            $error_dialog->run();
+            $error_dialog->destroy();
+            $dialog->destroy();
+            return;
+        }
+        
         if ($data) {
+            print "DEBUG: Project data loaded successfully\n";
+            print "DEBUG: Data keys: " . join(", ", keys %$data) . "\n";
+            
+            if ($data->{items}) {
+                print "DEBUG: Items keys: " . join(", ", keys %{$data->{items}}) . "\n";
+            } else {
+                print "DEBUG: WARNING - No items key in data!\n";
+            }
 
             if (-f $data->{image_path}) {
+                print "DEBUG: Loading image: $data->{image_path}\n";
                 load_image_file($data->{image_path}, $window);
                 zoom_fit_best(); 
             } else {
+                print "DEBUG: WARNING - Image not found: $data->{image_path}\n";
                 my $msg = Gtk3::MessageDialog->new($window, 'modal', 'warning', 'ok', 
                     "Original image not found at:\n" . $data->{image_path} . 
                     "\n\nThe annotations will load, but the background image is missing.");
@@ -2195,9 +2219,50 @@ sub prepare_items_for_save {
 sub restore_items_from_load {
     my ($loaded_items) = @_;
 
+    print "DEBUG: restore_items_from_load called\n";
+    
+    unless (defined $loaded_items) {
+        print "DEBUG: ERROR - loaded_items is undefined!\n";
+        return;
+    }
+    
+    unless (ref($loaded_items) eq 'HASH') {
+        print "DEBUG: ERROR - loaded_items is not a hash reference!\n";
+        return;
+    }
+
+    # Handle backward compatibility: map old key names to current ones
+    my %key_mapping = (
+        'pixelized_items' => 'pixelize_items',
+        'freehand_items'  => 'freehand-items',
+    );
+    
+    # Convert old keys to new keys
+    foreach my $old_key (keys %key_mapping) {
+        if (exists $loaded_items->{$old_key}) {
+            my $new_key = $key_mapping{$old_key};
+            print "DEBUG: Converting old key '$old_key' to '$new_key'\n";
+            $loaded_items->{$new_key} = $loaded_items->{$old_key};
+            delete $loaded_items->{$old_key};
+        }
+    }
+    
+    # Handle crop_rects: merge into rectangles array
+    if (exists $loaded_items->{crop_rects} && ref($loaded_items->{crop_rects}) eq 'ARRAY') {
+        print "DEBUG: Merging crop_rects into rectangles\n";
+        $loaded_items->{rectangles} = [] unless exists $loaded_items->{rectangles};
+        push @{$loaded_items->{rectangles}}, @{$loaded_items->{crop_rects}};
+        delete $loaded_items->{crop_rects};
+    }
+
     %items = ();
     
+    my $total_items = 0;
     foreach my $type (keys %$loaded_items) {
+        my $count = scalar(@{$loaded_items->{$type}});
+        print "DEBUG: Loading type '$type' with $count items\n";
+        $total_items += $count;
+        
         $items{$type} = [];
         foreach my $item (@{$loaded_items->{$type}}) {
          
@@ -2224,6 +2289,9 @@ sub restore_items_from_load {
             push @{$items{$type}}, $item;
         }
     }
+    
+    print "DEBUG: Total items loaded: $total_items\n";
+    print "DEBUG: Items hash now contains: " . join(", ", map { "$_=" . scalar(@{$items{$_}}) } keys %items) . "\n";
     
     $current_item = undef;
     @selected_items = ();
@@ -4369,10 +4437,11 @@ sub draw_pyramid {
             avg_y => _calculate_avg_y($v)
         };
 
+        # 2. Categorize Faces
         if ($name eq 'base') {
             push @base_face, $face_data;
         } elsif ($area <= 0) {
-
+            # Area <= 0 means the face is facing AWAY from camera (Hidden)
             if ($base_a < 1.0) {
                 push @hidden_sides, $face_data;
             }
@@ -4388,6 +4457,7 @@ sub draw_pyramid {
 
     my @faces_to_draw = (@hidden_sides, @base_face, @visible_sides);
 
+    # 4. Drawing Phase
     foreach my $item (@faces_to_draw) {
         my $name = $item->{name};
         my $v = $item->{vertices};
@@ -4413,7 +4483,7 @@ sub draw_pyramid {
             my $factor = 1.0;
             
             if ($name eq $dominant_face_name) { 
-
+                # Use exact base color for front face to match 2D shapes
                 ($r, $g, $b) = ($base_fill_color->red, $base_fill_color->green, $base_fill_color->blue);
             }
             elsif ($name eq 'base') { 
@@ -4437,6 +4507,7 @@ sub draw_pyramid {
         }
         $cr->close_path();
 
+        # Use alpha=0 for hidden faces (base and hidden sides), full alpha for visible faces
         my $face_alpha = ($name eq 'base' || grep { $_->{name} eq $name } @hidden_sides) ? 0.0 : $base_a;
         $cr->set_source_rgba($r, $g, $b, $face_alpha);
         $cr->fill_preserve(); 
@@ -4514,12 +4585,12 @@ sub draw_cuboid {
             } else {
                 my $hidden_lighting_factor = 0.4; 
                 $lit_fill_color = apply_lighting_to_color($base_fill_color, $hidden_lighting_factor);
-          
+                # Make hidden faces completely transparent
                 $lit_fill_color = Gtk3::Gdk::RGBA->new(
                     $lit_fill_color->red,
                     $lit_fill_color->green,
                     $lit_fill_color->blue,
-                    0.0  
+                    0.0  # Fully transparent
                 );
             }
 
@@ -4581,11 +4652,13 @@ sub draw_cuboid {
          
             my $lighting_factor = $face_lighting->{$face_name} || 0.5;
             my $lit_fill_color = apply_lighting_to_color($base_fill_color, $lighting_factor);
- 
+    
+            # Use exact base color for front face to match 2D shapes
             if ($face_name eq 'front') {
                 $lit_fill_color = $base_fill_color;
             }
-          
+
+            
             $cr->set_source_rgba(
                 $lit_fill_color->red,
                 $lit_fill_color->green,
@@ -5365,11 +5438,13 @@ sub draw_pentagon_handles {
     my ($cr, $pentagon) = @_;
     return unless $pentagon && $pentagon->{vertices};
 
+    # Draw vertex handles
     foreach my $i (0..$#{$pentagon->{vertices}}) {
         my $v = $pentagon->{vertices}[$i];
         draw_handle($cr, $v->[0], $v->[1], "vertex-$i");
     }
-
+    
+    # Draw midpoint handles
     if ($pentagon->{middle_points}) {
         foreach my $i (0..$#{$pentagon->{middle_points}}) {
             my $m = $pentagon->{middle_points}[$i];
@@ -8442,22 +8517,25 @@ sub shift_all_items {
 
 sub store_crop_state_for_undo {
     my ($crop_rect) = @_;
-
+    
+    # Clear any previous crop undo to free memory
     if (@undo_stack && $undo_stack[-1]{action} eq 'crop') {
-
+        # Remove old crop undo from stack to prevent memory buildup
         my $old_crop = pop @undo_stack;
-     
+        # Clean up temp file if it exists
         if ($old_crop->{temp_image_file} && -f $old_crop->{temp_image_file}) {
             unlink $old_crop->{temp_image_file};
         }
     }
     
-
+    # Save current image to temporary file
     my $temp_file = "/tmp/linia_crop_undo_" . time() . "_" . $$ . ".png";
     $image_surface->write_to_png($temp_file);
-
+    
+    # Clone all current items
     my $items_clone = clone_current_state();
-
+    
+    # Remove crop_rect from cloned items to prevent double rectangles after undo
     if (exists $items_clone->{rectangles}) {
         $items_clone->{rectangles} = [grep { $_->{type} ne 'crop_rect' } @{$items_clone->{rectangles}}];
     }
@@ -8473,7 +8551,10 @@ sub store_crop_state_for_undo {
     };
     
     push @undo_stack, $state;
-
+    
+    # Note: We don't limit undo_stack size here for crop since we only keep 1 crop
+    
+    # Clean up any crop temp files in redo_stack before clearing it
     for my $redo_action (@redo_stack) {
         if ($redo_action->{action} eq 'crop' && $redo_action->{temp_image_file} && -f $redo_action->{temp_image_file}) {
             unlink $redo_action->{temp_image_file};
@@ -8489,6 +8570,7 @@ sub store_crop_state_for_undo {
 sub apply_crop {
     return unless $current_item && $current_item->{type} eq 'crop_rect';
 
+    # Store state for undo before cropping
     store_crop_state_for_undo($current_item);
 
     my $crop_x = min($current_item->{x1}, $current_item->{x2});
@@ -10674,24 +10756,28 @@ sub do_undo {
         %items = %{$action->{previous_state}};
     }
     elsif ($action->{action} eq 'crop') {
-
+        # Restore image from temporary file
         if ($action->{temp_image_file} && -f $action->{temp_image_file}) {
             $image_surface = Cairo::ImageSurface->create_from_png($action->{temp_image_file});
             $original_width = $action->{previous_width};
             $original_height = $action->{previous_height};
-
+            
+            # Restore all items to their pre-crop positions
             %items = %{$action->{previous_items}};
-
+            
+            # Re-add the crop rectangle so user can adjust and re-crop
             if ($action->{crop_rect}) {
                 my $restored_crop_rect = clone_item($action->{crop_rect});
                 $restored_crop_rect->{selected} = 1;
                 push @{$items{rectangles}}, $restored_crop_rect;
                 $current_item = $restored_crop_rect;
-
+                
+                # Activate crop tool
                 $current_tool = 'crop';
                 update_tool_widgets('crop');
             }
-
+            
+            # Clear preview surface to force regeneration
             if (defined $preview_surface) {
                 $preview_surface->finish();
                 undef $preview_surface;
@@ -10708,7 +10794,7 @@ sub do_undo {
         item => $current_state_snapshot, 
         old_state => $action->{item},  
         previous_state => ($action->{action} eq 'clear_all' ? clone_current_state() : undef),
-
+        # For crop actions, preserve minimal data (temp files, not surfaces)
         ($action->{action} eq 'crop' ? (
             temp_image_file => $action->{temp_image_file},
             previous_width => $action->{previous_width},
@@ -10718,6 +10804,7 @@ sub do_undo {
         ) : ())
     };
 
+    # Don't clear current_item for crop actions - it's set to the crop rectangle
     unless ($action->{action} eq 'crop') {
         $current_item = undef;
     }
@@ -10766,7 +10853,8 @@ sub do_redo {
         );
     }
     elsif ($action->{action} eq 'crop') {
-
+        # Crop cannot be redone - it would require storing large image in memory
+        # User can simply crop again if needed
         print "Crop redo not supported - please crop again if needed\n";
     }
 
@@ -10905,4 +10993,3 @@ sub on_draw_page {
     
     return;
 }
-
