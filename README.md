@@ -403,7 +403,6 @@ Linia stores all configuration and resources in `~/.config/linia/`:
 ├── objects/               # Drawable objects (stars, warnings, etc.)
 ├── svgs/                  # SVG library for quick import
 ├── thumbnails/            # Cached thumbnails of recent files
-├── config.json            # Application configuration
 ├── icon_sizes.txt         # Toolbar icon size preferences
 ├── recent_files.txt       # Recent files list
 └── window_dimensions.txt  # Window size and position
