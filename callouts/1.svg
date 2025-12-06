@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="96"
+   height="96"
+   id="svg2"
+   version="1.1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="1.svg"
+   inkscape:export-filename="/a/home/cc/students/cs/barakitk/Documents/Cage_16_Blue.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   sodipodi:version="0.32"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   viewBox="0 0 96 96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#dadada"
+     borderopacity="1"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.1872038"
+     inkscape:cx="8.7851302"
+     inkscape:cy="34.199257"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     objecttolerance="20"
+     inkscape:object-nodes="false"
+     inkscape:object-paths="false"
+     inkscape:snap-global="true"
+     inkscape:snap-nodes="false"
+     inkscape:snap-center="false"
+     inkscape:window-width="1114"
+     inkscape:window-height="730"
+     inkscape:window-x="827"
+     inkscape:window-y="55"
+     inkscape:window-maximized="0"
+     showborder="true"
+     borderlayer="true"
+     inkscape:showpageshadow="false"
+     inkscape:snap-bbox="true"
+     showguides="true"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4140"
+       empspacing="5"
+       visible="false"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Barak Itkin &lt;lightningismyname@gmail.com&gt;</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Barak Itkin &lt;lightningismyname@gmail.com&gt;</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date>July 2010</dc:date>
+        <cc:license
+           rdf:resource="" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1036.3622)">
+    <g
+       id="g1"
+       transform="matrix(1.3243712,0,0,1.3243712,-16.661793,-349.17372)">
+      <path
+         id="path17"
+         d="m 33.864568,1051.7339 h 27.69821 c 1.08134,0 1.95845,0.8769 1.95845,1.9585 v 51.6739 c 0,1.0817 -0.87711,1.9585 -1.95845,1.9585 h -20.11338 l -6.61959,4.6518 2.1571,-4.6518 h -3.12234 c -1.08275,0 -1.95847,-0.8768 -1.95847,-1.9585 v -51.6739 c 0,-1.0816 0.87572,-1.9585 1.95847,-1.9585"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.013989" />
+      <path
+         id="path18"
+         d="m 33.864568,1052.1536 c -0.84914,0 -1.5388,0.6902 -1.5388,1.5388 v 51.6739 c 0,0.8485 0.68966,1.5388 1.5388,1.5388 h 3.77982 l -1.77521,3.8286 5.44732,-3.8286 h 20.24628 c 0.84773,0 1.53878,-0.6903 1.53878,-1.5388 v -51.6739 c 0,-0.8486 -0.69105,-1.5388 -1.53878,-1.5388 z m -0.0727,61.066 2.539,-5.4752 h -2.46625 c -1.31217,0 -2.37814,-1.0667 -2.37814,-2.3781 v -51.6739 c 0,-1.3113 1.06597,-2.3781 2.37814,-2.3781 h 27.69821 c 1.31076,0 2.37812,1.0668 2.37812,2.3781 v 51.6739 c 0,1.3114 -1.06736,2.3781 -2.37812,2.3781 h -19.98053 l -7.79048,5.4752"
+         style="fill:#211d1d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.013989" />
+    </g>
+  </g>
+</svg>

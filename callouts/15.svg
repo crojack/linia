@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="96"
+   height="96"
+   id="svg2"
+   version="1.1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="15.svg"
+   inkscape:export-filename="/a/home/cc/students/cs/barakitk/Documents/Cage_16_Blue.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   sodipodi:version="0.32"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   viewBox="0 0 96 96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#dadada"
+     borderopacity="1"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.1268467"
+     inkscape:cx="8.8743216"
+     inkscape:cy="84.306055"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     objecttolerance="20"
+     inkscape:object-nodes="false"
+     inkscape:object-paths="false"
+     inkscape:snap-global="true"
+     inkscape:snap-nodes="false"
+     inkscape:snap-center="false"
+     inkscape:window-width="1614"
+     inkscape:window-height="730"
+     inkscape:window-x="327"
+     inkscape:window-y="55"
+     inkscape:window-maximized="0"
+     showborder="true"
+     borderlayer="true"
+     inkscape:showpageshadow="false"
+     inkscape:snap-bbox="true"
+     showguides="true"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4140"
+       empspacing="5"
+       visible="false"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Barak Itkin &lt;lightningismyname@gmail.com&gt;</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Barak Itkin &lt;lightningismyname@gmail.com&gt;</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date>July 2010</dc:date>
+        <cc:license
+           rdf:resource="" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1036.3622)">
+    <g
+       id="g44"
+       transform="matrix(0.30675595,0,0,0.30675595,-158.47219,741.67951)">
+      <path
+         id="path29"
+         d="m 806.90531,1010.344 -267.09866,60.668 v 95.1 l 24.37067,2.6374 v 0 l 34.28267,49.36 v -45.652 l 208.44532,22.5478 V 1010.344"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.133333" />
+      <path
+         id="path30"
+         d="m 543.80665,1162.5214 22.61467,2.448 28.03867,40.3692 v -37.3372 l 208.44532,22.5481 v -175.1948 l -259.09866,58.8493 z m 58.65333,68.3584 -40.52666,-58.3518 -26.12667,-2.8253 v -101.884 l 3.11467,-0.708 271.98399,-61.7773 v 194.1281 l -208.44533,-22.5484 v 53.9667"
+         style="fill:#211d1d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.133333" />
+    </g>
+  </g>
+</svg>
