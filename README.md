@@ -51,7 +51,7 @@ What's Saved:
 
 <img width="3840" height="2160" alt="3840x2160-Japan-annotated-06-dec-2025-19_32" src="https://github.com/user-attachments/assets/193a5c27-e195-4516-94a1-07dd48c91add" />
 
-<img width="3840" height="2160" alt="3840x2160-Waves-annotated-06-dec-2025-19_36" src="https://github.com/user-attachments/assets/f8fbba4b-6e52-43cf-b654-317eb107b8e9" />
+<img width="3840" height="2160" alt="3840x2160-Waves-annotated-06-dec-2025-19_36" src="https://github.com/user-attachments/assets/d4a27f83-7489-42ae-ad5e-59f648782167" />
 
 
 #### Special Tools
@@ -65,6 +65,13 @@ What's Saved:
 - **Pixelization** - Blur sensitive information with adjustable pixel size
 - **SVG Import** - Import and place vector graphics from SVG files
 
+![3840x2160-Snow-annotated-06-dec-2025-19_40](https://github.com/user-attachments/assets/0f9fc246-12d9-4582-81ed-efcbd983f0bd)
+
+<img width="2938" height="1902" alt="Screenshot_20251206_195225" src="https://github.com/user-attachments/assets/8bd07185-4c10-4737-80f5-129909d9d7bb" />
+
+<img width="2938" height="1902" alt="Screenshot_20251206_194133" src="https://github.com/user-attachments/assets/b573eacd-06ac-4e5d-9bde-6f6beb8d4f24" />
+
+<img width="2938" height="1902" alt="Screenshot_20251206_194433" src="https://github.com/user-attachments/assets/5fe1476e-6899-43f6-8109-76a2b1567f9d" />
 
 
 
