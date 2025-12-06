@@ -122,13 +122,6 @@ if [ -d "$SCRIPT_DIR/svgs" ]; then
     cp -r "$SCRIPT_DIR/svgs/"* "$CONFIG_DIR/svgs/" 2>/dev/null || true
 fi
 
-# Copy config.json if it exists and user doesn't have one
-if [ -f "$SCRIPT_DIR/config.json" ] && [ ! -f "$CONFIG_DIR/config.json" ]; then
-    echo -e "${GREEN}Copying config.json...${NC}"
-    cp "$SCRIPT_DIR/config.json" "$CONFIG_DIR/config.json"
-    chmod 644 "$CONFIG_DIR/config.json"
-fi
-
 # Set correct permissions
 echo -e "${GREEN}Setting permissions...${NC}"
 chmod 755 "$CONFIG_DIR"
