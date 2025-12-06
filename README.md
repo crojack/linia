@@ -4,10 +4,7 @@
 
 **Linia** (short for **Lin**ux **I**mage **A**nnotator) is an image annotation application built with Perl and GTK3. Designed for Linux users who need annotation tools for screenshots, images, and diagrams. Linia has a comprehensive set of drawing tools and effects.
 
-<img width="2732" height="1882" alt="Screenshot_20251205_063335" src="https://github.com/user-attachments/assets/7a86499a-76c8-420b-9a24-f775dccb474d" />
-
-
-<img width="3316" height="2010" alt="Screenshot_20251130_044920" src="https://github.com/user-attachments/assets/b9ba8c91-33be-435f-835b-b593128fd9a5" />
+<img width="2938" height="1902" alt="Screenshot_20251206_205854" src="https://github.com/user-attachments/assets/9062d795-d530-407d-8c52-feb55fc32e9a" />
 
 
 ## Features
@@ -34,6 +31,7 @@ What's Saved:
 - Font information
 - Layer order and anchoring status
 
+<img width="2948" height="1905" alt="Screenshot_20251206_210334" src="https://github.com/user-attachments/assets/29fc6530-9c45-4917-99e5-0fbda0c67439" />
 
 ### Drawing Tools
 
@@ -51,6 +49,10 @@ What's Saved:
 - **Pyramid** - Draw 3D pyramids with realistic lighting and shading
 - **Cuboid** - Draw 3D rectangular prisms with perspective
 
+<img width="3840" height="2160" alt="3840x2160-Japan-annotated-06-dec-2025-19_32" src="https://github.com/user-attachments/assets/193a5c27-e195-4516-94a1-07dd48c91add" />
+
+<img width="3840" height="2160" alt="3840x2160-Waves-annotated-06-dec-2025-19_36" src="https://github.com/user-attachments/assets/f8fbba4b-6e52-43cf-b654-317eb107b8e9" />
+
 
 #### Special Tools
 - **Text Annotations** - Rich text with custom fonts, sizes, colors, and styles
@@ -62,6 +64,9 @@ What's Saved:
 - **Magnifier** - Zoom in on specific image areas with adjustable magnification
 - **Pixelization** - Blur sensitive information with adjustable pixel size
 - **SVG Import** - Import and place vector graphics from SVG files
+
+
+
 
 ### Selection & Manipulation
 
