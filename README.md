@@ -111,9 +111,9 @@ Linia features a unique **inverse dimming** system that highlights specific area
 <img width="3033" height="1966" alt="Screenshot_20251129_155258" src="https://github.com/user-attachments/assets/62246db3-f5c7-44a2-bd3e-3d021f17d6f3" />
 
 **How It Works:**
-1. Draw **rectangles, ellipses, triangles, tetragons, pentagons, or pyramids** around areas you want to highlight
+1. Draw **rectangles, ellipses, triangles, tetragons and pentagons** around areas you want to highlight
 2. Adjust the **"Dim" slider** in the widget toolbar (0-100%)
-3. Everything **outside** your shapes becomes dimmed/darkened
+3. Everything **outside** your shapes and other annotations becomes dimmed/darkened
 4. Your highlighted areas remain at full brightness
 
 **Use Cases:**
