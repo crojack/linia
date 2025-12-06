@@ -108,6 +108,8 @@ The widget toolbar provides extensive customization options:
 #### Visual Effects
 Linia features a unique **inverse dimming** system that highlights specific areas by dimming everything else:
 
+<img width="3033" height="1966" alt="Screenshot_20251129_155258" src="https://github.com/user-attachments/assets/62246db3-f5c7-44a2-bd3e-3d021f17d6f3" />
+
 **How It Works:**
 1. Draw **rectangles, ellipses, triangles, tetragons, pentagons, or pyramids** around areas you want to highlight
 2. Adjust the **"Dim" slider** in the widget toolbar (0-100%)
