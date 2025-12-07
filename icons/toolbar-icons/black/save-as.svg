@@ -65,28 +65,60 @@
        clipPathUnits="userSpaceOnUse"
        id="clipath_lpe_path-effect7">
       <rect
-         style="display:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+         style="display:block;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
          id="rect7"
          width="11.144279"
          height="9.6185741"
          x="20.829189"
-         y="1.127695"
-         d="m 20.829189,1.127695 h 11.144279 v 9.618574 H 20.829189 Z" />
-      <path
-         id="lpe_path-effect7"
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-         class="powerclip"
-         d="M -0.97288239,-0.77387726 H 32.747346 V 32.946351 H -0.97288239 Z M 20.829189,1.127695 v 9.618574 H 31.973468 V 1.127695 Z" />
+         y="1.127695" />
     </clipPath>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter14"
+       x="-0.053864569"
+       y="-0.030265976"
+       width="1.0958825"
+       height="1.1042666">
+      <feFlood
+         result="flood"
+         in="SourceGraphic"
+         flood-opacity="1.000000"
+         flood-color="rgb(170,170,170)"
+         id="feFlood13" />
+      <feGaussianBlur
+         result="blur"
+         in="SourceGraphic"
+         stdDeviation="0.300000"
+         id="feGaussianBlur13" />
+      <feOffset
+         result="offset"
+         in="blur"
+         dx="0.300000"
+         dy="0.500000"
+         id="feOffset13" />
+      <feComposite
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset"
+         id="feComposite13" />
+      <feComposite
+         result="comp2"
+         operator="over"
+         in="SourceGraphic"
+         in2="comp1"
+         id="feComposite14" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#929292"
+     pagecolor="#ffffff"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
      inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="true"
+     inkscape:pagecheckerboard="false"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="10.659634"
      inkscape:cx="14.024872"
@@ -102,25 +134,26 @@
      inkscape:groupmode="layer"
      inkscape:label="Image"
      id="g1">
-    <rect
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.07514;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:fill markers stroke"
-       id="rect11"
-       width="6.1334901"
-       height="5.7768917"
-       x="11.630261"
-       y="4.2320852" />
-    <rect
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.18266;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-       id="rect8"
-       width="11.482466"
-       height="9.2715549"
-       x="9.8395853"
-       y="18.282055" />
     <g
-       id="g7"
-       transform="matrix(1.0751437,0,0,1.0751437,-1.2407309,-1.0680612)">
+       id="g2"
+       style="filter:url(#filter14)">
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.07514;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:fill markers stroke"
+         id="rect11"
+         width="6.1334901"
+         height="5.7768917"
+         x="11.630261"
+         y="4.2320852" />
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.18266;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+         id="rect8"
+         width="11.482466"
+         height="9.2715549"
+         x="9.7457733"
+         y="19.032549" />
       <g
-         id="g5">
+         id="g5"
+         transform="matrix(1.0751437,0,0,1.0751437,-1.2407309,-1.0680612)">
         <path
            style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.15152;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
            id="rect2"
@@ -138,36 +171,6 @@
            id="path4"
            sodipodi:nodetypes="ccccccccc" />
       </g>
-      <path
-         style="fill:none;fill-opacity:1;stroke:#c0c0c0;stroke-width:1.15152;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.988235;paint-order:fill markers stroke"
-         id="path5"
-         width="22.568708"
-         height="22.568708"
-         x="4.6028776"
-         y="4.8018827"
-         clip-path="url(#clipath_lpe_path-effect7)"
-         sodipodi:type="rect"
-         d="M 4.6028776,4.8018827 H 27.171586 V 27.370591 H 4.6028776 Z"
-         inkscape:path-effect="#path-effect7"
-         transform="matrix(0.91751359,0,0,0.91751359,1.2937539,1.3101692)" />
-      <path
-         style="fill:none;fill-opacity:1;stroke:#c0c0c0;stroke-width:1.01626;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-         d="m 20.438315,5.9772855 5.624202,5.2261925"
-         id="path7" />
     </g>
-    <rect
-       style="fill:none;fill-opacity:1;stroke:#c0c0c0;stroke-width:1.00099;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:fill markers stroke"
-       id="rect10"
-       width="9.4176636"
-       height="8.0981493"
-       x="10.889865"
-       y="19.332336" />
-    <rect
-       style="fill:none;fill-opacity:1;stroke:#c1c1c1;stroke-width:0.772849;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:fill markers stroke"
-       id="rect12"
-       width="4.484971"
-       height="4.0822363"
-       x="12.406269"
-       y="5.2933712" />
   </g>
 </svg>
