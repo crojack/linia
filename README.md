@@ -172,15 +172,23 @@ Right-click on any annotation to access:
 - Handle size
 - Delete
 - Anchor/Unanchor
+
+<img width="2938" height="1902" alt="Screenshot_20251207_013726" src="https://github.com/user-attachments/assets/bd92f022-86a3-4b25-b173-bf53356bd280" />
+
+
 - Bring to Front/Send to Back
+
+<img width="2938" height="1902" alt="Screenshot_20251207_013913" src="https://github.com/user-attachments/assets/c9fd3514-4325-4715-b7dd-c4824188f052" />
+
 - Show Measurements (for lines, rectangles, pyramids)
-- Add Intersection (for pyramids)
 
 #### Measurements
 Display pixel dimensions and measurements directly on annotations:
 - Line lengths
 - Rectangle dimensions
 - Pyramid heights and base measurements
+
+<img width="1862" height="1055" alt="Screenshot_20251207_014617-annotated-07-dec-2025-02_07" src="https://github.com/user-attachments/assets/dfa12fd2-1eb0-421b-ae98-f569dd4f2db8" />
 
 #### Smart Editing
 - **Curved Arrows** - Click arrow midpoint to create curved arrows
