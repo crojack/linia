@@ -204,66 +204,156 @@ Display pixel dimensions and measurements directly on annotations:
 - **Recent Files** - Quick access to recently opened images
 - **Keyboard Shortcuts** - Extensive keyboard shortcut support
 
-
 ## Installation
 
 ### Prerequisites
 
-**Required Perl Modules:**
-- `Gtk3` - GTK3 Perl bindings
-- `Cairo` - Cairo graphics library bindings
-- `Pango` - Text rendering
-- `Image::Magick` - Image processing
-- `XML::Simple` - XML parsing for SVG support
+Linia requires both **system libraries** and **Perl bindings** to be installed.
 
+#### System Libraries (usually pre-installed)
+
+Most Linux distributions already have these:
+- GTK3
+- Cairo graphics library
+- Pango text library
+- ImageMagick
+
+If not, install them:
+
+**Debian/Ubuntu/Mint:**
 ```bash
-# Ubuntu/Debian
-sudo apt-get install libgtk3-perl libcairo-perl libpango-perl \
-                     libglib-perl libimage-magick-perl libjson-perl
-
-# Fedora/RHEL
-sudo dnf install perl-Gtk3 perl-Cairo perl-Pango perl-Glib \
-                 perl-Image-Magick perl-JSON
-
-# Arch Linux
-sudo pacman -S perl-gtk3 perl-cairo perl-pango perl-glib imagemagick perl-json
+sudo apt-get install libgtk-3-0 libcairo2 libpango-1.0-0 imagemagick
 ```
 
-### Download & Install
+**Fedora/RHEL/CentOS:**
+```bash
+sudo dnf install gtk3 cairo pango ImageMagick
+```
 
+**Arch Linux/Manjaro:**
+```bash
+sudo pacman -S gtk3 cairo pango imagemagick
+```
+
+#### Perl Module Dependencies
+
+**CRITICAL:** Even if GTK3/Pango are installed system-wide, you need the Perl bindings:
+
+**Debian/Ubuntu/Linux Mint:**
+```bash
+sudo apt-get install libglib-object-introspection-perl libcairo-perl libjson-perl \
+                     libnumber-bytes-human-perl libfile-which-perl \
+                     libfile-copy-recursive-perl libproc-simple-perl \
+                     libsort-naturally-perl libimage-magick-perl libfile-homedir-perl
+```
+
+**Fedora/RHEL/CentOS:**
+```bash
+sudo dnf install perl-Glib-Object-Introspection perl-Cairo perl-JSON \
+                 perl-Number-Bytes-Human perl-File-Which \
+                 perl-File-Copy-Recursive perl-Proc-Simple \
+                 perl-Sort-Naturally perl-Image-Magick perl-File-HomeDir
+```
+
+**Arch Linux/Manjaro:**
+```bash
+sudo pacman -S perl-glib-object-introspection perl-cairo perl-json perl-image-magick
+# Some modules may require AUR or CPAN
+```
+
+**openSUSE:**
+```bash
+sudo zypper install perl-Glib-Object-Introspection perl-Cairo perl-JSON \
+                    perl-Number-Bytes-Human perl-Image-Magick
+```
+
+**Using CPAN (if packages unavailable):**
+```bash
+sudo cpan Glib::Object::Introspection Cairo JSON Number::Bytes::Human \
+          File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \
+          Image::Magick File::HomeDir
+```
+
+#### Verify Installation
+
+Check if all Perl modules are available:
+```bash
+# Test individual modules
+perl -MGlib::Object::Introspection -e 1 && echo "✓ Glib::Object::Introspection"
+perl -MCairo -e 1 && echo "✓ Cairo"
+perl -MJson -e 1 && echo "✓ JSON"
+```
+
+### Quick Install
 ```bash
 # Clone the repository
 git clone https://github.com/crojack/linia.git
 cd linia
 
-# Run the install script
+# Make install script executable
 chmod +x install.sh
+
+# Run the installer (it will check dependencies first)
 ./install.sh
 ```
 
-The install script will:
-- Install `linia` to `~/.local/bin/linia`
-- Create configuration directory at `~/.config/linia/`
-- Copy all icons, callouts, objects, and SVG files
-- Install application icon to `~/.local/share/icons/`
-- Create desktop menu entry (Graphics category)
-- Register `.linia` file association
-- Set correct permissions
-- Update desktop, MIME, and icon databases
+The installer will:
+- Check for all required Perl modules
+- Show specific installation commands if dependencies are missing
+- Install Linia to `~/.local/bin/linia`
+- Create desktop menu entry with icon
+- Register `.linia` file type with custom icon
+- Set up file associations for images
 
-**Note:** Make sure `~/.local/bin` is in your PATH. If not, add to `~/.bashrc` or `~/.zshrc`:
+### Common Installation Issues
 
+**Error: "Can't locate Pango.pm in @INC"**
+
+This means the Perl bindings for GTK3/Pango are not installed. The system GTK3 library is present, but Perl cannot access it.
+
+**Solution:**
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+# Debian/Ubuntu
+sudo apt-get install libglib-object-introspection-perl
+
+# Fedora/RHEL
+sudo dnf install perl-Glib-Object-Introspection
+
+# Arch
+sudo pacman -S perl-glib-object-introspection
 ```
 
-After installation, Linia will be integrated with your desktop environment:
-- **Application Menu** - Find Linia in your application launcher (Graphics category)
-- **File Associations** - Right-click images and select "Open with Linia"
-- **Double-click .linia files** - Project files open directly in Linia
-- **System Icon** - Professional icon in menus and launchers
+**Error: "Can't locate Cairo.pm"**
+```bash
+# Debian/Ubuntu
+sudo apt-get install libcairo-perl
 
-*Note: You may need to log out and log back in for the menu entry to appear in some desktop environments.*
+# Fedora/RHEL
+sudo dnf install perl-Cairo
+
+# Arch
+sudo pacman -S perl-cairo
+```
+
+**Error: "Can't locate JSON.pm"**
+```bash
+# Debian/Ubuntu
+sudo apt-get install libjson-perl
+
+# Fedora/RHEL
+sudo dnf install perl-JSON
+
+# Arch
+sudo pacman -S perl-json
+```
+
+**Key Understanding:**
+
+GTK3 has **two parts**:
+1. **C Libraries** (`libgtk-3-0`, `libpango`, etc.) - The core system libraries
+2. **Perl Bindings** (`libglib-object-introspection-perl`) - Allows Perl to use those libraries
+
+Most users have #1 but not #2, which is why the "Pango.pm not found" error occurs!
 
 ### Manual Installation
 
