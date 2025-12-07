@@ -9594,6 +9594,16 @@ sub show_item_context_menu {
 
     my $menu = Gtk3::Menu->new();
 
+    # Add Edit Text option for text items
+    if ($current_item->{type} eq 'text') {
+        my $edit_text_item = Gtk3::MenuItem->new_with_label("Edit Text");
+        $edit_text_item->signal_connect('activate' => sub {
+            show_text_edit_dialog($current_item, $window);
+        });
+        $menu->append($edit_text_item);
+        $menu->append(Gtk3::SeparatorMenuItem->new());
+    }
+
     my $layers_menu_item = Gtk3::MenuItem->new_with_label("Layers");
     my $layers_submenu = Gtk3::Menu->new();
     my $raise_to_top_item = Gtk3::MenuItem->new_with_label("Raise to Top");
@@ -9647,31 +9657,36 @@ sub show_item_context_menu {
     my $item_type = $current_item->{type};
     if ($item_type =~ /^(line|dashed-line|rectangle|tetragon|pyramid)$/) {
         $menu->append(Gtk3::SeparatorMenuItem->new());
-
+        
+        # Migrate old show_measures flag to new flags
         if (defined $current_item->{show_measures} && $current_item->{show_measures}) {
             $current_item->{show_angles} = 1 unless defined $current_item->{show_angles};
             $current_item->{show_edges} = 1 unless defined $current_item->{show_edges};
             $current_item->{show_area} = 1 unless defined $current_item->{show_area};
             delete $current_item->{show_measures};
         }
-
+        
+        # Create Show Measures menu with submenu
         my $measures_menu_item = Gtk3::MenuItem->new_with_label("Show Measures");
         my $measures_submenu = Gtk3::Menu->new();
-
+        
+        # Angles submenu item
         my $angles_item = Gtk3::CheckMenuItem->new_with_label("Angles");
         $angles_item->set_active($current_item->{show_angles} // 0);
         $angles_item->signal_connect('activate' => sub { 
             toggle_measure_type($current_item, 'angles'); 
         });
         $measures_submenu->append($angles_item);
-
+        
+        # Edges submenu item
         my $edges_item = Gtk3::CheckMenuItem->new_with_label("Edges");
         $edges_item->set_active($current_item->{show_edges} // 0);
         $edges_item->signal_connect('activate' => sub { 
             toggle_measure_type($current_item, 'edges'); 
         });
         $measures_submenu->append($edges_item);
-
+        
+        # Area submenu item
         my $area_item = Gtk3::CheckMenuItem->new_with_label("Area");
         $area_item->set_active($current_item->{show_area} // 0);
         $area_item->signal_connect('activate' => sub { 
