@@ -274,16 +274,6 @@ sudo cpan Glib::Object::Introspection Cairo JSON Number::Bytes::Human \
           Image::Magick File::HomeDir
 ```
 
-#### Verify Installation
-
-Check if all Perl modules are available:
-```bash
-# Test individual modules
-perl -MGlib::Object::Introspection -e 1 && echo "✓ Glib::Object::Introspection"
-perl -MCairo -e 1 && echo "✓ Cairo"
-perl -MJson -e 1 && echo "✓ JSON"
-```
-
 ### Quick Install
 ```bash
 # Clone the repository
