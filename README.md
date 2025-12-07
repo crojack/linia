@@ -188,7 +188,7 @@ Display pixel dimensions and measurements directly on annotations:
 - Rectangle dimensions
 - Pyramid heights and base measurements
 
-<img width="1862" height="1055" alt="Screenshot_20251207_014617-annotated-07-dec-2025-02_07" src="https://github.com/user-attachments/assets/dfa12fd2-1eb0-421b-ae98-f569dd4f2db8" />
+<img width="2938" height="1902" alt="Screenshot_20251207_023056" src="https://github.com/user-attachments/assets/62f7fbb4-8a59-44de-b766-44749ef868d1" />
 
 #### Smart Editing
 - **Curved Arrows** - Click arrow midpoint to create curved arrows
