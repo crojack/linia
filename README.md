@@ -151,6 +151,9 @@ Linia features a unique **inverse dimming** system that highlights specific area
 #### File Operations
 - **SVG Import** - Import and resize SVG graphics
 - **Recent Files** - Quick access to recently opened images with thumbnails
+
+<img width="2943" height="2022" alt="Screenshot from 2025-12-07-01-26-28-annotated-07-dec-2025-01_27" src="https://github.com/user-attachments/assets/180f3bd2-2709-4908-844f-eb4a87eb4edd" />
+
 - **Save As** - Export annotated images as PNG or JPEG
 - **Print** - Direct printing support
 - **Clipboard** - Copy annotated image to clipboard (Ctrl+Shift+C)
