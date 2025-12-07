@@ -996,7 +996,50 @@ $window->signal_connect('delete-event' => sub {
 $window->signal_connect('destroy' => sub { Gtk3::main_quit(); });
 $window->signal_connect('configure-event' => \&update_drawing_area_size);
 $window->signal_connect('map-event' => sub {
-    if ($initial_file && -f $initial_file) { load_image_file($initial_file, $window); zoom_fit_best(); }
+    if ($initial_file && -f $initial_file) {
+    
+        if ($initial_file =~ /\.linia$/i) {
+
+            local $/; 
+            if (open(my $fh, '<', $initial_file)) {
+                my $json_text = <$fh>;
+                close $fh;
+                
+                my $data = eval { from_json($json_text) };
+                
+                if ($data) {
+              
+                    if ($data->{image_path} && -f $data->{image_path}) {
+                        load_image_file($data->{image_path}, $window);
+                        zoom_fit_best(); 
+                    } else {
+                        my $msg = Gtk3::MessageDialog->new($window, 'modal', 'warning', 'ok', 
+                            "Original image not found at:\n" . ($data->{image_path} || "unknown") . 
+                            "\n\nThe annotations will load, but the background image is missing.");
+                        $msg->run();
+                        $msg->destroy();
+                    }
+
+                    restore_items_from_load($data->{items});
+
+                    $global_timestamp = $data->{global_timestamp} || 0;
+                    $dimming_level = $data->{dimming_level} || 0;
+                    
+                    if ($dimming_scale) {
+                        $dimming_scale->set_value($dimming_level);
+                    }
+
+                    update_drawing_area_size();
+                    $drawing_area->queue_draw();
+                    $project_is_modified = 0;
+                }
+            }
+        } else {
+       
+            load_image_file($initial_file, $window);
+            zoom_fit_best();
+        }
+    }
     return FALSE;
 });
 
