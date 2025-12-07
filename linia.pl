@@ -1552,23 +1552,16 @@ $drawing_area->signal_connect('button-release-event' => sub {
 # 1. Load history
 load_recent_files();
 update_recent_files_menu();
-
-# 2. Update UI state to match defaults
 update_undo_redo_ui();
 
-# 3. Show the window (must be done before loading tool state in some cases)
 $window->show_all();
 
-# 4. Apply Toolbar Position Preference
 if ($drawing_toolbar_on_left) { 
     $move_drawing_toolbar->set_active(TRUE); 
 }
 
-# 5. Load Persistence (Colors, Widths, etc.)
-# We load this LAST so it overrides any defaults set during UI construction
 load_tool_state();
 
-# 6. Start the Application Loop
 Gtk3::main();
 
 # =============================================================================
@@ -2231,13 +2224,11 @@ sub restore_items_from_load {
         return;
     }
 
-    # Handle backward compatibility: map old key names to current ones
     my %key_mapping = (
         'pixelized_items' => 'pixelize_items',
         'freehand_items'  => 'freehand-items',
     );
-    
-    # Convert old keys to new keys
+
     foreach my $old_key (keys %key_mapping) {
         if (exists $loaded_items->{$old_key}) {
             my $new_key = $key_mapping{$old_key};
@@ -2246,8 +2237,7 @@ sub restore_items_from_load {
             delete $loaded_items->{$old_key};
         }
     }
-    
-    # Handle crop_rects: merge into rectangles array
+
     if (exists $loaded_items->{crop_rects} && ref($loaded_items->{crop_rects}) eq 'ARRAY') {
         print "DEBUG: Merging crop_rects into rectangles\n";
         $loaded_items->{rectangles} = [] unless exists $loaded_items->{rectangles};
@@ -4437,11 +4427,10 @@ sub draw_pyramid {
             avg_y => _calculate_avg_y($v)
         };
 
-        # 2. Categorize Faces
         if ($name eq 'base') {
             push @base_face, $face_data;
         } elsif ($area <= 0) {
-            # Area <= 0 means the face is facing AWAY from camera (Hidden)
+         
             if ($base_a < 1.0) {
                 push @hidden_sides, $face_data;
             }
@@ -4483,7 +4472,7 @@ sub draw_pyramid {
             my $factor = 1.0;
             
             if ($name eq $dominant_face_name) { 
-                # Use exact base color for front face to match 2D shapes
+        
                 ($r, $g, $b) = ($base_fill_color->red, $base_fill_color->green, $base_fill_color->blue);
             }
             elsif ($name eq 'base') { 
@@ -4507,7 +4496,6 @@ sub draw_pyramid {
         }
         $cr->close_path();
 
-        # Use alpha=0 for hidden faces (base and hidden sides), full alpha for visible faces
         my $face_alpha = ($name eq 'base' || grep { $_->{name} eq $name } @hidden_sides) ? 0.0 : $base_a;
         $cr->set_source_rgba($r, $g, $b, $face_alpha);
         $cr->fill_preserve(); 
@@ -4585,12 +4573,12 @@ sub draw_cuboid {
             } else {
                 my $hidden_lighting_factor = 0.4; 
                 $lit_fill_color = apply_lighting_to_color($base_fill_color, $hidden_lighting_factor);
-                # Make hidden faces completely transparent
+         
                 $lit_fill_color = Gtk3::Gdk::RGBA->new(
                     $lit_fill_color->red,
                     $lit_fill_color->green,
                     $lit_fill_color->blue,
-                    0.0  # Fully transparent
+                    0.0  
                 );
             }
 
@@ -4652,8 +4640,7 @@ sub draw_cuboid {
          
             my $lighting_factor = $face_lighting->{$face_name} || 0.5;
             my $lit_fill_color = apply_lighting_to_color($base_fill_color, $lighting_factor);
-    
-            # Use exact base color for front face to match 2D shapes
+
             if ($face_name eq 'front') {
                 $lit_fill_color = $base_fill_color;
             }
@@ -5438,13 +5425,11 @@ sub draw_pentagon_handles {
     my ($cr, $pentagon) = @_;
     return unless $pentagon && $pentagon->{vertices};
 
-    # Draw vertex handles
     foreach my $i (0..$#{$pentagon->{vertices}}) {
         my $v = $pentagon->{vertices}[$i];
         draw_handle($cr, $v->[0], $v->[1], "vertex-$i");
     }
-    
-    # Draw midpoint handles
+
     if ($pentagon->{middle_points}) {
         foreach my $i (0..$#{$pentagon->{middle_points}}) {
             my $m = $pentagon->{middle_points}[$i];
@@ -5475,7 +5460,20 @@ sub draw_cuboid_handles {
 sub draw_measurements_on_item {
     my ($cr, $item) = @_;
     
-    return unless $item && $item->{show_measures};
+    return unless $item;
+
+    if (defined $item->{show_measures} && $item->{show_measures}) {
+        $item->{show_angles} = 1 unless defined $item->{show_angles};
+        $item->{show_edges} = 1 unless defined $item->{show_edges};
+        $item->{show_area} = 1 unless defined $item->{show_area};
+        delete $item->{show_measures};
+    }
+
+    my $show_any = ($item->{show_angles} // 0) || 
+                   ($item->{show_edges} // 0) || 
+                   ($item->{show_area} // 0);
+    
+    return unless $show_any;
 
     my $type = $item->{type};
 
@@ -5497,6 +5495,8 @@ sub draw_measurements_on_item {
 
 sub draw_line_measurements {
     my ($cr, $item) = @_;
+    
+    return unless $item->{show_edges};
     
     my $dx = $item->{end_x} - $item->{start_x};
     my $dy = $item->{end_y} - $item->{start_y};
@@ -5524,21 +5524,24 @@ sub draw_rectangle_measurements {
     my $height = abs($item->{y2} - $item->{y1});
     my $area = $width * $height;
 
-    my $center_x = ($item->{x1} + $item->{x2}) / 2;
-    my $center_y = ($item->{y1} + $item->{y2}) / 2;
-    my $area_text = sprintf("%.1f pxÂ²", $area);
-    draw_measurement_text($cr, $area_text, $center_x, $center_y);
-    
-    my $top_mid_x = ($item->{x1} + $item->{x2}) / 2;
-    my $top_y = min($item->{y1}, $item->{y2}) - 35;  
-    my $width_text = sprintf("%.1f px", $width);
-    draw_measurement_text($cr, $width_text, $top_mid_x, $top_y);
-    
-    my $right_x = max($item->{x1}, $item->{x2}) + 50;  
-    my $right_mid_y = ($item->{y1} + $item->{y2}) / 2;
-    my $height_text = sprintf("%.1f px", $height);
-    draw_measurement_text($cr, $height_text, $right_x, $right_mid_y);
+    if ($item->{show_area}) {
+        my $center_x = ($item->{x1} + $item->{x2}) / 2;
+        my $center_y = ($item->{y1} + $item->{y2}) / 2;
+        my $area_text = sprintf("%.1f px²", $area);
+        draw_measurement_text($cr, $area_text, $center_x, $center_y);
+    }
 
+    if ($item->{show_edges}) {
+        my $top_mid_x = ($item->{x1} + $item->{x2}) / 2;
+        my $top_y = min($item->{y1}, $item->{y2}) - 35;  
+        my $width_text = sprintf("%.1f px", $width);
+        draw_measurement_text($cr, $width_text, $top_mid_x, $top_y);
+        
+        my $right_x = max($item->{x1}, $item->{x2}) + 50;  
+        my $right_mid_y = ($item->{y1} + $item->{y2}) / 2;
+        my $height_text = sprintf("%.1f px", $height);
+        draw_measurement_text($cr, $height_text, $right_x, $right_mid_y);
+    }
     
     return;
 }
@@ -5549,52 +5552,58 @@ sub draw_tetragon_measurements {
     my @vertices = @{$item->{vertices}};
     my @sides;
     my @angles;
-    
-    for my $i (0..3) {
-        my $next = ($i + 1) % 4;
-        my $dx = $vertices[$next][0] - $vertices[$i][0];
-        my $dy = $vertices[$next][1] - $vertices[$i][1];
-        my $length = sqrt($dx * $dx + $dy * $dy);
-        push @sides, $length;
-        
-        my $mid_x = ($vertices[$i][0] + $vertices[$next][0]) / 2;
-        my $mid_y = ($vertices[$i][1] + $vertices[$next][1]) / 2;
-        
-        my $angle = atan2($dy, $dx);
-        my $perp_angle = $angle + pi / 2;
-        my $offset = 25;
-        my $text_x = $mid_x + cos($perp_angle) * $offset;
-        my $text_y = $mid_y + sin($perp_angle) * $offset;
-        
-        my $text = sprintf("%.1f", $length);
-        draw_measurement_text($cr, $text, $text_x, $text_y, 10);
+
+    if ($item->{show_edges}) {
+        for my $i (0..3) {
+            my $next = ($i + 1) % 4;
+            my $dx = $vertices[$next][0] - $vertices[$i][0];
+            my $dy = $vertices[$next][1] - $vertices[$i][1];
+            my $length = sqrt($dx * $dx + $dy * $dy);
+            push @sides, $length;
+            
+            my $mid_x = ($vertices[$i][0] + $vertices[$next][0]) / 2;
+            my $mid_y = ($vertices[$i][1] + $vertices[$next][1]) / 2;
+            
+            my $angle = atan2($dy, $dx);
+            my $perp_angle = $angle + pi / 2;
+            my $offset = 25;
+            my $text_x = $mid_x + cos($perp_angle) * $offset;
+            my $text_y = $mid_y + sin($perp_angle) * $offset;
+            
+            my $text = sprintf("%.1f", $length);
+            draw_measurement_text($cr, $text, $text_x, $text_y, 10);
+        }
     }
-    
-    for my $i (0..3) {
-        my $prev = ($i - 1 + 4) % 4;
-        my $next = ($i + 1) % 4;
-        
-        my $angle = calculate_interior_angle(
-            $vertices[$prev], $vertices[$i], $vertices[$next]
-        );
-        push @angles, $angle;
-        
-        my $angle_text = sprintf("%.1fÂ°", $angle);
-        draw_angle_marker($cr, $vertices[$i][0], $vertices[$i][1], $angle_text);
+
+    if ($item->{show_angles}) {
+        for my $i (0..3) {
+            my $prev = ($i - 1 + 4) % 4;
+            my $next = ($i + 1) % 4;
+            
+            my $angle = calculate_interior_angle(
+                $vertices[$prev], $vertices[$i], $vertices[$next]
+            );
+            push @angles, $angle;
+            
+            my $angle_text = sprintf("%.1f°", $angle);
+            draw_angle_marker($cr, $vertices[$i][0], $vertices[$i][1], $angle_text);
+        }
     }
-    
-    my $area = abs(calculate_polygon_area(\@vertices));
-    my $center_x = 0;
-    my $center_y = 0;
-    foreach my $v (@vertices) {
-        $center_x += $v->[0];
-        $center_y += $v->[1];
+
+    if ($item->{show_area}) {
+        my $area = abs(calculate_polygon_area(\@vertices));
+        my $center_x = 0;
+        my $center_y = 0;
+        foreach my $v (@vertices) {
+            $center_x += $v->[0];
+            $center_y += $v->[1];
+        }
+        $center_x /= 4;
+        $center_y /= 4;
+        
+        my $area_text = sprintf("%.1f px²", $area);
+        draw_measurement_text($cr, $area_text, $center_x, $center_y);
     }
-    $center_x /= 4;
-    $center_y /= 4;
-    
-    my $area_text = sprintf("%.1f pxÂ²", $area);
-    draw_measurement_text($cr, $area_text, $center_x, $center_y);
     
     return;
 }
@@ -5612,59 +5621,65 @@ sub draw_pyramid_measurements {
         [$item->{base_left}, $item->{base_back}]
     );
 
-    for my $i (0..3) {
-        my $next = ($i + 1) % 4;
-        my $dx = $base_vertices[$next][0] - $base_vertices[$i][0];
-        my $dy = $base_vertices[$next][1] - $base_vertices[$i][1];
-        my $length = sqrt($dx * $dx + $dy * $dy);
+    if ($item->{show_edges}) {
+        for my $i (0..3) {
+            my $next = ($i + 1) % 4;
+            my $dx = $base_vertices[$next][0] - $base_vertices[$i][0];
+            my $dy = $base_vertices[$next][1] - $base_vertices[$i][1];
+            my $length = sqrt($dx * $dx + $dy * $dy);
 
-        my $mid_x = ($base_vertices[$i][0] + $base_vertices[$next][0]) / 2;
-        my $mid_y = ($base_vertices[$i][1] + $base_vertices[$next][1]) / 2;
-        
-        my $angle = atan2($dy, $dx);
-        my $perp_angle = $angle + pi / 2;
-        my $offset = 25;
-        my $text_x = $mid_x + cos($perp_angle) * $offset;
-        my $text_y = $mid_y + sin($perp_angle) * $offset;
-        
-        my $text = sprintf("%.1f", $length);
-        draw_measurement_text($cr, $text, $text_x, $text_y, 10);
+            my $mid_x = ($base_vertices[$i][0] + $base_vertices[$next][0]) / 2;
+            my $mid_y = ($base_vertices[$i][1] + $base_vertices[$next][1]) / 2;
+            
+            my $angle = atan2($dy, $dx);
+            my $perp_angle = $angle + pi / 2;
+            my $offset = 25;
+            my $text_x = $mid_x + cos($perp_angle) * $offset;
+            my $text_y = $mid_y + sin($perp_angle) * $offset;
+            
+            my $text = sprintf("%.1f", $length);
+            draw_measurement_text($cr, $text, $text_x, $text_y, 10);
+        }
     }
 
-    my $area = abs(calculate_polygon_area(\@base_vertices));
-    my $center_x = ($item->{base_left} + $item->{base_right}) / 2;
-    my $center_y = ($item->{base_front} + $item->{base_back}) / 2;
-    
-    my $area_text = sprintf("%.1f pxÂ²", $area);
-    draw_measurement_text($cr, $area_text, $center_x, $center_y);
-    
-    my @front_face = (
-        [$item->{base_left}, $item->{base_front}],
-        [$item->{base_right}, $item->{base_front}],
-        [$apex_x, $apex_y]
-    );
-    draw_face_angles_with_offset($cr, \@front_face, 0, 25); 
-    
-    my @right_face = (
-        [$item->{base_right}, $item->{base_front}],
-        [$item->{base_right}, $item->{base_back}],
-        [$apex_x, $apex_y]
-    );
-    draw_face_angles_with_offset($cr, \@right_face, 25, 0); 
+    if ($item->{show_area}) {
+        my $area = abs(calculate_polygon_area(\@base_vertices));
+        my $center_x = ($item->{base_left} + $item->{base_right}) / 2;
+        my $center_y = ($item->{base_front} + $item->{base_back}) / 2;
+        
+        my $area_text = sprintf("%.1f px²", $area);
+        draw_measurement_text($cr, $area_text, $center_x, $center_y);
+    }
 
-    my @back_face = (
-        [$item->{base_right}, $item->{base_back}],
-        [$item->{base_left}, $item->{base_back}],
-        [$apex_x, $apex_y]
-    );
-    draw_face_angles_with_offset($cr, \@back_face, 0, -25);  
+    if ($item->{show_angles}) {
+        my @front_face = (
+            [$item->{base_left}, $item->{base_front}],
+            [$item->{base_right}, $item->{base_front}],
+            [$apex_x, $apex_y]
+        );
+        draw_face_angles_with_offset($cr, \@front_face, 0, 25); 
+        
+        my @right_face = (
+            [$item->{base_right}, $item->{base_front}],
+            [$item->{base_right}, $item->{base_back}],
+            [$apex_x, $apex_y]
+        );
+        draw_face_angles_with_offset($cr, \@right_face, 25, 0); 
 
-    my @left_face = (
-        [$item->{base_left}, $item->{base_back}],
-        [$item->{base_left}, $item->{base_front}],
-        [$apex_x, $apex_y]
-    );
-    draw_face_angles_with_offset($cr, \@left_face, -25, 0);
+        my @back_face = (
+            [$item->{base_right}, $item->{base_back}],
+            [$item->{base_left}, $item->{base_back}],
+            [$apex_x, $apex_y]
+        );
+        draw_face_angles_with_offset($cr, \@back_face, 0, -25);  
+
+        my @left_face = (
+            [$item->{base_left}, $item->{base_back}],
+            [$item->{base_left}, $item->{base_front}],
+            [$apex_x, $apex_y]
+        );
+        draw_face_angles_with_offset($cr, \@left_face, -25, 0);
+    }
     
     return;
 }
@@ -5682,7 +5697,7 @@ sub draw_face_angles {
             $vertices->[$next]
         );
         
-        my $angle_text = sprintf("%.1fÂ°", $angle);
+        my $angle_text = sprintf("%.1f°", $angle);
         draw_angle_marker($cr, $vertices->[$i][0], $vertices->[$i][1], $angle_text);
     }
     
@@ -5702,7 +5717,7 @@ sub draw_face_angles_with_offset {
             $vertices->[$next]
         );
         
-        my $angle_text = sprintf("%.1fÂ°", $angle);
+        my $angle_text = sprintf("%.1f°", $angle);
 
         my $marker_x = $vertices->[$i][0] + $offset_x;
         my $marker_y = $vertices->[$i][1] + $offset_y;
@@ -5772,7 +5787,6 @@ sub draw_angle_marker {
     
     return;
 }
-    
     
 # =============================================================================
 # SECTION 7. MATH & GEOMETRY Hit (Calculations)
@@ -7026,7 +7040,7 @@ sub determine_pyramid_visibility_and_lighting {
         );
     }
     else {
-        # Catch-all
+
         @visible_faces = ('back', 'right', 'front', 'left');
         %face_lighting = (
             'front' => 1.0,
@@ -8517,25 +8531,21 @@ sub shift_all_items {
 
 sub store_crop_state_for_undo {
     my ($crop_rect) = @_;
-    
-    # Clear any previous crop undo to free memory
+
     if (@undo_stack && $undo_stack[-1]{action} eq 'crop') {
-        # Remove old crop undo from stack to prevent memory buildup
+
         my $old_crop = pop @undo_stack;
-        # Clean up temp file if it exists
+
         if ($old_crop->{temp_image_file} && -f $old_crop->{temp_image_file}) {
             unlink $old_crop->{temp_image_file};
         }
     }
-    
-    # Save current image to temporary file
+
     my $temp_file = "/tmp/linia_crop_undo_" . time() . "_" . $$ . ".png";
     $image_surface->write_to_png($temp_file);
-    
-    # Clone all current items
+
     my $items_clone = clone_current_state();
-    
-    # Remove crop_rect from cloned items to prevent double rectangles after undo
+
     if (exists $items_clone->{rectangles}) {
         $items_clone->{rectangles} = [grep { $_->{type} ne 'crop_rect' } @{$items_clone->{rectangles}}];
     }
@@ -8551,10 +8561,7 @@ sub store_crop_state_for_undo {
     };
     
     push @undo_stack, $state;
-    
-    # Note: We don't limit undo_stack size here for crop since we only keep 1 crop
-    
-    # Clean up any crop temp files in redo_stack before clearing it
+
     for my $redo_action (@redo_stack) {
         if ($redo_action->{action} eq 'crop' && $redo_action->{temp_image_file} && -f $redo_action->{temp_image_file}) {
             unlink $redo_action->{temp_image_file};
@@ -8570,7 +8577,6 @@ sub store_crop_state_for_undo {
 sub apply_crop {
     return unless $current_item && $current_item->{type} eq 'crop_rect';
 
-    # Store state for undo before cropping
     store_crop_state_for_undo($current_item);
 
     my $crop_x = min($current_item->{x1}, $current_item->{x2});
@@ -9513,7 +9519,9 @@ sub show_item_context_menu {
             });
             $handle_size_submenu->append($size_item);
         }
+
         $handle_size_submenu->append(Gtk3::SeparatorMenuItem->new());
+
         my $custom_item = Gtk3::MenuItem->new_with_label('Custom...');
         $custom_item->signal_connect('activate' => sub { show_handle_size_dialog($window); });
         $handle_size_submenu->append($custom_item);
@@ -9523,22 +9531,7 @@ sub show_item_context_menu {
 
         $menu->append(Gtk3::SeparatorMenuItem->new());
 
-        my $anchor_item = Gtk3::MenuItem->new_with_label("Anchor All");
-        $anchor_item->signal_connect('activate' => sub {
-            foreach my $item (@selected_items) { anchor_item($item); }
-        });
-        $menu->append($anchor_item);
-
-        my $unanchor_item = Gtk3::MenuItem->new_with_label("Unanchor All");
-        $unanchor_item->signal_connect('activate' => sub {
-            foreach my $item (@selected_items) { unanchor_item($item); }
-        });
-        $menu->append($unanchor_item);
-
-        $menu->append(Gtk3::SeparatorMenuItem->new());
-
         my $copy_item = Gtk3::MenuItem->new_with_label("Copy");
-
         $copy_item->signal_connect('activate' => \&copy_item);
         $menu->append($copy_item);
 
@@ -9547,34 +9540,16 @@ sub show_item_context_menu {
         $menu->append($cut_item);
 
         my $delete_item = Gtk3::MenuItem->new_with_label("Delete");
-        $delete_item->signal_connect('activate' => \&delete_item); 
+        $delete_item->signal_connect('activate' => \&delete_item);
         $menu->append($delete_item);
-
-        $menu->append(Gtk3::SeparatorMenuItem->new());
-
-        my $clear_sel_item = Gtk3::MenuItem->new_with_label("Clear Selection");
-        $clear_sel_item->signal_connect('activate' => sub {
-            deselect_all_items();
-            $drawing_area->queue_draw();
-        });
-        $menu->append($clear_sel_item);
 
         $menu->show_all();
         $menu->popup(undef, undef, undef, undef, $event->button, $event->time);
-        return;
+
+        return TRUE;
     }
 
-    return unless $current_item;
     my $menu = Gtk3::Menu->new();
-    
-    if ($current_item->{type} eq 'text') {
-        my $edit_text_item = Gtk3::MenuItem->new_with_label("Edit Text");
-        $edit_text_item->signal_connect('activate' => sub {
-            show_text_edit_dialog($current_item, $window);
-        });
-        $menu->append($edit_text_item);
-        $menu->append(Gtk3::SeparatorMenuItem->new());
-    }
 
     my $layers_menu_item = Gtk3::MenuItem->new_with_label("Layers");
     my $layers_submenu = Gtk3::Menu->new();
@@ -9629,9 +9604,40 @@ sub show_item_context_menu {
     my $item_type = $current_item->{type};
     if ($item_type =~ /^(line|dashed-line|rectangle|tetragon|pyramid)$/) {
         $menu->append(Gtk3::SeparatorMenuItem->new());
-        my $measures_item = Gtk3::MenuItem->new_with_label("Show Measures");
-        $measures_item->signal_connect('activate' => sub { show_measures_tooltip($current_item); });
-        $menu->append($measures_item);
+
+        if (defined $current_item->{show_measures} && $current_item->{show_measures}) {
+            $current_item->{show_angles} = 1 unless defined $current_item->{show_angles};
+            $current_item->{show_edges} = 1 unless defined $current_item->{show_edges};
+            $current_item->{show_area} = 1 unless defined $current_item->{show_area};
+            delete $current_item->{show_measures};
+        }
+
+        my $measures_menu_item = Gtk3::MenuItem->new_with_label("Show Measures");
+        my $measures_submenu = Gtk3::Menu->new();
+
+        my $angles_item = Gtk3::CheckMenuItem->new_with_label("Angles");
+        $angles_item->set_active($current_item->{show_angles} // 0);
+        $angles_item->signal_connect('activate' => sub { 
+            toggle_measure_type($current_item, 'angles'); 
+        });
+        $measures_submenu->append($angles_item);
+
+        my $edges_item = Gtk3::CheckMenuItem->new_with_label("Edges");
+        $edges_item->set_active($current_item->{show_edges} // 0);
+        $edges_item->signal_connect('activate' => sub { 
+            toggle_measure_type($current_item, 'edges'); 
+        });
+        $measures_submenu->append($edges_item);
+
+        my $area_item = Gtk3::CheckMenuItem->new_with_label("Area");
+        $area_item->set_active($current_item->{show_area} // 0);
+        $area_item->signal_connect('activate' => sub { 
+            toggle_measure_type($current_item, 'area'); 
+        });
+        $measures_submenu->append($area_item);
+        
+        $measures_menu_item->set_submenu($measures_submenu);
+        $menu->append($measures_menu_item);
     }
 
     if ($current_item->{type} eq 'numbered-circle') {
@@ -9668,20 +9674,37 @@ sub show_item_context_menu {
     return;
 }
 
-sub show_measures_tooltip {
-    my ($item) = @_;
+sub toggle_measure_type {
+    my ($item, $type) = @_;
     return unless $item;
-
-    if (defined $item->{show_measures} && $item->{show_measures}) {
-        $item->{show_measures} = 0;
-    } else {
-        $item->{show_measures} = 1;
+    
+    if ($type eq 'angles') {
+        if (defined $item->{show_angles} && $item->{show_angles}) {
+            $item->{show_angles} = 0;
+        } else {
+            $item->{show_angles} = 1;
+        }
+    }
+    elsif ($type eq 'edges') {
+        if (defined $item->{show_edges} && $item->{show_edges}) {
+            $item->{show_edges} = 0;
+        } else {
+            $item->{show_edges} = 1;
+        }
+    }
+    elsif ($type eq 'area') {
+        if (defined $item->{show_area} && $item->{show_area}) {
+            $item->{show_area} = 0;
+        } else {
+            $item->{show_area} = 1;
+        }
     }
     
     $drawing_area->queue_draw();
     
     return;
 }
+
 
 # Operations:
 
@@ -10756,28 +10779,24 @@ sub do_undo {
         %items = %{$action->{previous_state}};
     }
     elsif ($action->{action} eq 'crop') {
-        # Restore image from temporary file
+
         if ($action->{temp_image_file} && -f $action->{temp_image_file}) {
             $image_surface = Cairo::ImageSurface->create_from_png($action->{temp_image_file});
             $original_width = $action->{previous_width};
             $original_height = $action->{previous_height};
-            
-            # Restore all items to their pre-crop positions
+
             %items = %{$action->{previous_items}};
-            
-            # Re-add the crop rectangle so user can adjust and re-crop
+
             if ($action->{crop_rect}) {
                 my $restored_crop_rect = clone_item($action->{crop_rect});
                 $restored_crop_rect->{selected} = 1;
                 push @{$items{rectangles}}, $restored_crop_rect;
                 $current_item = $restored_crop_rect;
-                
-                # Activate crop tool
+
                 $current_tool = 'crop';
                 update_tool_widgets('crop');
             }
-            
-            # Clear preview surface to force regeneration
+
             if (defined $preview_surface) {
                 $preview_surface->finish();
                 undef $preview_surface;
@@ -10794,7 +10813,7 @@ sub do_undo {
         item => $current_state_snapshot, 
         old_state => $action->{item},  
         previous_state => ($action->{action} eq 'clear_all' ? clone_current_state() : undef),
-        # For crop actions, preserve minimal data (temp files, not surfaces)
+
         ($action->{action} eq 'crop' ? (
             temp_image_file => $action->{temp_image_file},
             previous_width => $action->{previous_width},
@@ -10804,7 +10823,6 @@ sub do_undo {
         ) : ())
     };
 
-    # Don't clear current_item for crop actions - it's set to the crop rectangle
     unless ($action->{action} eq 'crop') {
         $current_item = undef;
     }
@@ -10853,8 +10871,7 @@ sub do_redo {
         );
     }
     elsif ($action->{action} eq 'crop') {
-        # Crop cannot be redone - it would require storing large image in memory
-        # User can simply crop again if needed
+
         print "Crop redo not supported - please crop again if needed\n";
     }
 
