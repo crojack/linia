@@ -174,7 +174,7 @@ my $magnifier_radius = 100;
 my $magnifier_zoom = 2.0;
 my $handle_size = 5;
 my $line_width = 3.0;
-my $icon_theme = 'white';
+my $icon_theme = 'color';
 
 # --- Paths ---
 my @recent_files;
@@ -9323,9 +9323,10 @@ sub show_settings_dialog {
     $theme_label->set_halign('start');
 
     my $theme_combo = Gtk3::ComboBoxText->new();
+    $theme_combo->append('color', 'Multi-Color');
     $theme_combo->append('white', 'White (Dark Mode)');
     $theme_combo->append('black', 'Black (Light Mode)');
-    $theme_combo->append('color', 'Multi-Color');
+
 
     $theme_combo->set_active_id($icon_theme);
 
