@@ -95,7 +95,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="15.074999"
      inkscape:cx="15.389719"
-     inkscape:cy="15.456054"
+     inkscape:cy="15.389719"
      inkscape:window-width="1729"
      inkscape:window-height="952"
      inkscape:window-x="158"
@@ -105,8 +105,7 @@
      inkscape:groupmode="layer"
      inkscape:label="Image"
      id="g1"><g
-       id="g12"
-       style="filter:url(#filter13)"><circle
+       id="g12"><circle
          style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          id="path2"
          cx="16"

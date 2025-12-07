@@ -637,7 +637,7 @@
      inkscape:groupmode="layer"
      id="layer1"><path
        sodipodi:type="star"
-       style="fill:none;stroke:#000000;stroke-width:0.4050315;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill;filter:url(#filter10)"
+       style="fill:none;stroke:#000000;stroke-width:0.4050315;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
        id="path8"
        inkscape:flatsided="false"
        sodipodi:sides="5"

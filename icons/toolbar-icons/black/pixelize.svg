@@ -28,7 +28,7 @@
      showgrid="false"
      inkscape:zoom="12.74961"
      inkscape:cx="16.11814"
-     inkscape:cy="17.020128"
+     inkscape:cy="16.941695"
      inkscape:window-width="1920"
      inkscape:window-height="984"
      inkscape:window-x="0"
@@ -4441,8 +4441,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><g
-       id="g1"
-       style="filter:url(#filter4)"><rect
+       id="g1"><rect
          style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.20108333;stroke-linecap:square;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
          id="rect2"
          width="1.1294342"

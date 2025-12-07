@@ -27,12 +27,12 @@
      inkscape:document-units="px"
      showgrid="false"
      inkscape:zoom="12.749609"
-     inkscape:cx="18.15742"
-     inkscape:cy="23.059531"
+     inkscape:cx="18.235853"
+     inkscape:cy="23.098748"
      inkscape:window-width="1920"
      inkscape:window-height="984"
      inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"><inkscape:grid
        type="xygrid"
@@ -667,6 +667,6 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><path
-       style="fill:none;stroke:#000000;stroke-width:0.427575;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers;filter:url(#filter18)"
+       style="fill:none;stroke:#000000;stroke-width:0.427575;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        d="M 1.7176121,1.634926 C 6.9360848,6.834213 6.9360848,6.834213 6.9360848,6.834213"
        id="path1" /></g></svg>

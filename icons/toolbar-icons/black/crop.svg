@@ -27,12 +27,12 @@
      inkscape:document-units="px"
      showgrid="false"
      inkscape:zoom="9.0153349"
-     inkscape:cx="18.191227"
-     inkscape:cy="13.865264"
+     inkscape:cx="18.246688"
+     inkscape:cy="13.809803"
      inkscape:window-width="1920"
      inkscape:window-height="984"
      inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"><inkscape:grid
        type="xygrid"
@@ -804,8 +804,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><g
-       id="g1"
-       style="filter:url(#filter4)"><rect
+       id="g1"><rect
          style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.324665;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;paint-order:fill markers stroke"
          id="rect1"
          width="0.55559331"

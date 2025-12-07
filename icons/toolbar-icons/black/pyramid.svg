@@ -636,8 +636,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><g
-       id="g1"
-       style="filter:url(#filter13)"><path
+       id="g1"><path
          style="fill:none;stroke:#000000;stroke-width:0.28257501;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="M 4.1624765,0.98173279 0.92705698,6.2853299 3.7183993,7.7408282 7.4613357,6.4049598 Z"
          id="path1" /><path

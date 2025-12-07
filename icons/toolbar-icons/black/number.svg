@@ -27,7 +27,7 @@
      inkscape:document-units="px"
      showgrid="false"
      inkscape:zoom="12.749609"
-     inkscape:cx="27.334172"
+     inkscape:cx="27.412605"
      inkscape:cy="19.530011"
      inkscape:window-width="1920"
      inkscape:window-height="984"
@@ -636,8 +636,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><g
-       id="g1"
-       style="filter:url(#filter2)"><circle
+       id="g1"><circle
          style="fill:none;stroke:#000000;stroke-width:0.39687501;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke fill markers;stroke-opacity:1;stroke-dasharray:none"
          id="path1"
          cx="4.1400781"
