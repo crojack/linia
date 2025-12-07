@@ -7,28 +7,105 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Function to check if a Perl module is available
+check_perl_module() {
+    perl -M"$1" -e 1 2>/dev/null
+    return $?
+}
+
 # Check for critical dependencies
-echo -e "${GREEN}Checking dependencies...${NC}"
+echo -e "${GREEN}Checking Perl module dependencies...${NC}"
+echo ""
+
 MISSING_DEPS=0
-for module in Gtk3 Cairo Pango Image::Magick XML::Simple; do
-    if ! perl -M$module -e 1 2>/dev/null; then
-        echo -e "${YELLOW}Warning: Perl module $module is missing.${NC}"
+MISSING_MODULES=""
+
+# Check for Glib::Object::Introspection (provides Gtk3, Pango, etc.)
+if ! check_perl_module "Glib::Object::Introspection"; then
+    echo -e "${RED}✗ Glib::Object::Introspection${NC} - MISSING (provides Gtk3/Pango bindings)"
+    MISSING_DEPS=1
+    MISSING_MODULES="$MISSING_MODULES Glib::Object::Introspection"
+else
+    echo -e "${GREEN}✓ Glib::Object::Introspection${NC}"
+fi
+
+# Check for other critical modules
+for module in Cairo JSON "Number::Bytes::Human" "File::Which" "File::Copy::Recursive" "Proc::Simple" "Sort::Naturally" "Image::Magick" "File::HomeDir"; do
+    if ! check_perl_module "$module"; then
+        echo -e "${RED}✗ $module${NC} - MISSING"
         MISSING_DEPS=1
+        MISSING_MODULES="$MISSING_MODULES $module"
+    else
+        echo -e "${GREEN}✓ $module${NC}"
     fi
 done
 
+echo ""
+
 if [ $MISSING_DEPS -eq 1 ]; then
-    echo -e "${RED}Some dependencies are missing.${NC}"
-    echo "On Debian/Ubuntu/Mint, run:"
-    echo "sudo apt install libgtk3-perl libcairo-perl libpango-perl libimage-magick-perl libxml-simple-perl"
+    echo -e "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${RED}║  MISSING DEPENDENCIES - INSTALLATION REQUIRED                 ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
+    echo -e "${YELLOW}The following Perl modules are required but not installed:${NC}"
+    echo -e "${YELLOW}$MISSING_MODULES${NC}"
+    echo ""
+    echo -e "${BLUE}Installation instructions by distribution:${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Debian/Ubuntu/Linux Mint:${NC}"
+    echo "  sudo apt-get update"
+    echo "  sudo apt-get install libglib-object-introspection-perl libcairo-perl libjson-perl \\"
+    echo "                       libnumber-bytes-human-perl libfile-which-perl \\"
+    echo "                       libfile-copy-recursive-perl libproc-simple-perl \\"
+    echo "                       libsort-naturally-perl libimage-magick-perl libfile-homedir-perl"
+    echo ""
+    
+    echo -e "${GREEN}Fedora/RHEL/CentOS:${NC}"
+    echo "  sudo dnf install perl-Glib-Object-Introspection perl-Cairo perl-JSON \\"
+    echo "                   perl-Number-Bytes-Human perl-File-Which \\"
+    echo "                   perl-File-Copy-Recursive perl-Proc-Simple \\"
+    echo "                   perl-Sort-Naturally perl-Image-Magick perl-File-HomeDir"
+    echo ""
+    
+    echo -e "${GREEN}Arch Linux/Manjaro:${NC}"
+    echo "  sudo pacman -S perl-glib-object-introspection perl-cairo perl-json \\"
+    echo "                 perl-image-magick"
+    echo "  # Some modules may need AUR or CPAN"
+    echo ""
+    
+    echo -e "${GREEN}openSUSE:${NC}"
+    echo "  sudo zypper install perl-Glib-Object-Introspection perl-Cairo perl-JSON \\"
+    echo "                      perl-Number-Bytes-Human perl-Image-Magick"
+    echo ""
+    
+    echo -e "${GREEN}Using CPAN (if package manager doesn't have all modules):${NC}"
+    echo "  sudo cpan Glib::Object::Introspection Cairo JSON Number::Bytes::Human \\"
+    echo "            File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \\"
+    echo "            Image::Magick File::HomeDir"
+    echo ""
+    
+    echo -e "${YELLOW}Note: You also need system GTK3, Cairo, and ImageMagick libraries installed.${NC}"
+    echo -e "${YELLOW}Most distributions have these by default, but if not:${NC}"
+    echo ""
+    echo "  Debian/Ubuntu: sudo apt-get install libgtk-3-0 libcairo2 imagemagick"
+    echo "  Fedora/RHEL:   sudo dnf install gtk3 cairo ImageMagick"
+    echo "  Arch Linux:    sudo pacman -S gtk3 cairo imagemagick"
+    echo ""
+    
     read -p "Continue installation anyway? (y/N) " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Installation cancelled. Please install dependencies first.${NC}"
         exit 1
     fi
+    echo ""
+else
+    echo -e "${GREEN}All Perl module dependencies satisfied! ✓${NC}"
+    echo ""
 fi
 
 set -e  # Exit on error
