@@ -74,6 +74,18 @@ What's Saved:
 <img width="2938" height="1902" alt="Screenshot_20251206_194433" src="https://github.com/user-attachments/assets/5fe1476e-6899-43f6-8109-76a2b1567f9d" />
 
 
+### UI
+
+The application looks best when used with a dark theme, especially with white or multi-colour icons. I recommend the Qogir-Dark GTK3 theme.
+
+If you prefer a light theme, please use the multi-colour icons for the best appearance:
+Edit → Settings → Icon Theme → Multi-colour
+
+The current black (symbolic-style) icons aren’t ideal yet and still need improvement.
+
+You can also use your own custom icons. Simply navigate to:
+~/.config/linia/icons/toolbar-icons
+Inside, you’ll find three subdirectories: white, black, and color. Replace the icons in any of these folders with your own.
 
 ### Selection & Manipulation
 
