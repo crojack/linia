@@ -9873,7 +9873,12 @@ sub zoom_out {
 sub zoom_original {
     return unless $image_surface;
 
-    $scale_factor = 1.0;
+    my $monitor_scale = 1;
+    if (defined $window && $window->get_window()) {
+        $monitor_scale = $window->get_scale_factor();
+    }
+
+    $scale_factor = 1.0 / $monitor_scale;
 
     my ($win_width, $win_height) = $window->get_size();
 
