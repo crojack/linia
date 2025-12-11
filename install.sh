@@ -32,8 +32,9 @@ else
     echo -e "${GREEN}✓ Glib::Object::Introspection${NC}"
 fi
 
-# Check for other critical modules 
-for module in Gtk3 Pango Cairo JSON "Number::Bytes::Human" "File::Which" "File::Copy::Recursive" "Proc::Simple" "Sort::Naturally" "Image::Magick" "File::HomeDir"; do
+# Check for other critical modules
+# Added Glib to this list because linia.pl uses "use Glib;"
+for module in Gtk3 Pango Glib Cairo JSON "Number::Bytes::Human" "File::Which" "File::Copy::Recursive" "Proc::Simple" "Sort::Naturally" "Image::Magick" "File::HomeDir"; do
     if ! check_perl_module "$module"; then
         echo -e "${RED}✗ $module${NC} - MISSING"
         MISSING_DEPS=1
@@ -58,32 +59,35 @@ if [ $MISSING_DEPS -eq 1 ]; then
     
     echo -e "${GREEN}Debian/Ubuntu/Linux Mint:${NC}"
     echo "  sudo apt-get update"
-    echo "  sudo apt-get install libgtk3-perl libpango-perl libglib-object-introspection-perl \\"
+    # Added libglib-perl here
+    echo "  sudo apt-get install libgtk3-perl libpango-perl libglib-perl libglib-object-introspection-perl \\"
     echo "                       libcairo-perl libjson-perl libnumber-bytes-human-perl \\"
     echo "                       libfile-which-perl libfile-copy-recursive-perl libproc-simple-perl \\"
     echo "                       libsort-naturally-perl libimage-magick-perl libfile-homedir-perl"
     echo ""
     
     echo -e "${GREEN}Fedora/RHEL/CentOS:${NC}"
-    echo "  sudo dnf install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection \\"
+    # Added perl-Glib here
+    echo "  sudo dnf install perl-Gtk3 perl-Pango perl-Glib perl-Glib-Object-Introspection \\"
     echo "                   perl-Cairo perl-JSON perl-Number-Bytes-Human \\"
     echo "                   perl-File-Which perl-File-Copy-Recursive perl-Proc-Simple \\"
     echo "                   perl-Sort-Naturally perl-Image-Magick perl-File-HomeDir"
     echo ""
     
     echo -e "${GREEN}Arch Linux/Manjaro:${NC}"
-    echo "  sudo pacman -S perl-gtk3 perl-pango perl-glib-object-introspection \\"
+    # Added perl-glib here
+    echo "  sudo pacman -S perl-gtk3 perl-pango perl-glib perl-glib-object-introspection \\"
     echo "                 perl-cairo perl-json perl-image-magick"
     echo "  # Some modules may need AUR or CPAN"
     echo ""
     
     echo -e "${GREEN}openSUSE:${NC}"
-    echo "  sudo zypper install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection \\"
+    echo "  sudo zypper install perl-Gtk3 perl-Pango perl-Glib perl-Glib-Object-Introspection \\"
     echo "                      perl-Cairo perl-JSON perl-Number-Bytes-Human perl-Image-Magick"
     echo ""
     
     echo -e "${GREEN}Using CPAN (if package manager doesn't have all modules):${NC}"
-    echo "  sudo cpan Gtk3 Pango Glib::Object::Introspection Cairo JSON Number::Bytes::Human \\"
+    echo "  sudo cpan Gtk3 Pango Glib Glib::Object::Introspection Cairo JSON Number::Bytes::Human \\"
     echo "            File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \\"
     echo "            Image::Magick File::HomeDir"
     echo ""
