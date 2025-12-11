@@ -23,7 +23,7 @@ echo ""
 MISSING_DEPS=0
 MISSING_MODULES=""
 
-# Check for Glib::Object::Introspection (provides Gtk3, Pango, etc.)
+# Check for Glib::Object::Introspection (Base requirement)
 if ! check_perl_module "Glib::Object::Introspection"; then
     echo -e "${RED}✗ Glib::Object::Introspection${NC} - MISSING (provides Gtk3/Pango bindings)"
     MISSING_DEPS=1
@@ -32,8 +32,8 @@ else
     echo -e "${GREEN}✓ Glib::Object::Introspection${NC}"
 fi
 
-# Check for other critical modules
-for module in Cairo JSON "Number::Bytes::Human" "File::Which" "File::Copy::Recursive" "Proc::Simple" "Sort::Naturally" "Image::Magick" "File::HomeDir"; do
+# Check for other critical modules 
+for module in Gtk3 Pango Cairo JSON "Number::Bytes::Human" "File::Which" "File::Copy::Recursive" "Proc::Simple" "Sort::Naturally" "Image::Magick" "File::HomeDir"; do
     if ! check_perl_module "$module"; then
         echo -e "${RED}✗ $module${NC} - MISSING"
         MISSING_DEPS=1
@@ -58,32 +58,32 @@ if [ $MISSING_DEPS -eq 1 ]; then
     
     echo -e "${GREEN}Debian/Ubuntu/Linux Mint:${NC}"
     echo "  sudo apt-get update"
-    echo "  sudo apt-get install libglib-object-introspection-perl libcairo-perl libjson-perl \\"
-    echo "                       libnumber-bytes-human-perl libfile-which-perl \\"
-    echo "                       libfile-copy-recursive-perl libproc-simple-perl \\"
+    echo "  sudo apt-get install libgtk3-perl libpango-perl libglib-object-introspection-perl \\"
+    echo "                       libcairo-perl libjson-perl libnumber-bytes-human-perl \\"
+    echo "                       libfile-which-perl libfile-copy-recursive-perl libproc-simple-perl \\"
     echo "                       libsort-naturally-perl libimage-magick-perl libfile-homedir-perl"
     echo ""
     
     echo -e "${GREEN}Fedora/RHEL/CentOS:${NC}"
-    echo "  sudo dnf install perl-Glib-Object-Introspection perl-Cairo perl-JSON \\"
-    echo "                   perl-Number-Bytes-Human perl-File-Which \\"
-    echo "                   perl-File-Copy-Recursive perl-Proc-Simple \\"
+    echo "  sudo dnf install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection \\"
+    echo "                   perl-Cairo perl-JSON perl-Number-Bytes-Human \\"
+    echo "                   perl-File-Which perl-File-Copy-Recursive perl-Proc-Simple \\"
     echo "                   perl-Sort-Naturally perl-Image-Magick perl-File-HomeDir"
     echo ""
     
     echo -e "${GREEN}Arch Linux/Manjaro:${NC}"
-    echo "  sudo pacman -S perl-glib-object-introspection perl-cairo perl-json \\"
-    echo "                 perl-image-magick"
+    echo "  sudo pacman -S perl-gtk3 perl-pango perl-glib-object-introspection \\"
+    echo "                 perl-cairo perl-json perl-image-magick"
     echo "  # Some modules may need AUR or CPAN"
     echo ""
     
     echo -e "${GREEN}openSUSE:${NC}"
-    echo "  sudo zypper install perl-Glib-Object-Introspection perl-Cairo perl-JSON \\"
-    echo "                      perl-Number-Bytes-Human perl-Image-Magick"
+    echo "  sudo zypper install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection \\"
+    echo "                      perl-Cairo perl-JSON perl-Number-Bytes-Human perl-Image-Magick"
     echo ""
     
     echo -e "${GREEN}Using CPAN (if package manager doesn't have all modules):${NC}"
-    echo "  sudo cpan Glib::Object::Introspection Cairo JSON Number::Bytes::Human \\"
+    echo "  sudo cpan Gtk3 Pango Glib::Object::Introspection Cairo JSON Number::Bytes::Human \\"
     echo "            File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \\"
     echo "            Image::Magick File::HomeDir"
     echo ""

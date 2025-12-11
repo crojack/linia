@@ -233,17 +233,17 @@ If not, install them:
 
 **Debian/Ubuntu/Mint:**
 ```bash
-sudo apt-get install libgtk-3-0 libcairo2 libpango-1.0-0 imagemagick
+sudo apt-get install libgtk3-perl libpango-perl libgtk-3-0 libcairo2 libpango-1.0-0 imagemagick
 ```
 
 **Fedora/RHEL/CentOS:**
 ```bash
-sudo dnf install gtk3 cairo pango ImageMagick
+sudo dnf install perl-Gtk3 perl-Pango gtk3 cairo pango ImageMagick
 ```
 
 **Arch Linux/Manjaro:**
 ```bash
-sudo pacman -S gtk3 cairo pango imagemagick
+sudo pacman -S perl-gtk3 perl-pango gtk3 cairo pango imagemagick
 ```
 
 #### Perl Module Dependencies
@@ -274,13 +274,13 @@ sudo pacman -S perl-glib-object-introspection perl-cairo perl-json perl-image-ma
 
 **openSUSE:**
 ```bash
-sudo zypper install perl-Glib-Object-Introspection perl-Cairo perl-JSON \
+sudo zypper install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection perl-Cairo perl-JSON \
                     perl-Number-Bytes-Human perl-Image-Magick
 ```
 
 **Using CPAN (if packages unavailable):**
 ```bash
-sudo cpan Glib::Object::Introspection Cairo JSON Number::Bytes::Human \
+sudo cpan Gtk3 Pango Glib::Object::Introspection Cairo JSON Number::Bytes::Human \
           File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \
           Image::Magick File::HomeDir
 ```
