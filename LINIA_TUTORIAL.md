@@ -15,7 +15,7 @@
 
 ## Introduction
 
-**Linia** (Linux Image Annotator) is a powerful annotation application designed for marking up screenshots and images on Linux. It provides professional-grade drawing tools, persistent undo/redo capabilities, and a unique project file system that preserves your complete editing history across sessions.
+**Linia** (Linux Image Annotator) is an annotation application designed for marking up screenshots and images on Linux. It provides multiple drawing tools, persistent undo/redo capabilities, and a project file system that preserves your complete editing history across sessions.
 
 ### Key Features
 - **Comprehensive Drawing Tools**: Lines, arrows, shapes (2D and 3D), text, freehand, highlighting
