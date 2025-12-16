@@ -1444,7 +1444,7 @@ $drawing_area->signal_connect('button-press-event' => sub {
             } elsif ($current_item->{type} eq 'magnifier') {
                 $handle = get_circle_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'svg') {
-                $handle = get_svg_handle($event->x, $event->y, $current_item);
+                $handle = get_svg_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'numbered-circle') {
                 $handle = get_circle_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'freehand' || $current_item->{type} eq 'highlighter') {
