@@ -279,7 +279,7 @@ load_icon_sizes();
 load_tool_state();
 
 $window = Gtk3::Window->new('toplevel');
-$window->set_title('Linia - Lin(ux) I(mage) A(nnotator)');
+$window->set_title('Linia');
 $window->set_default_size($window_width, $window_height);
 
 $menu_bar_box = Gtk3::Box->new('horizontal', 0);
@@ -1961,7 +1961,7 @@ sub close_image {
         $drawing_area->queue_draw();
         $project_is_modified = 0;
         
-        $window->set_title('Linia - Lin(ux) I(mage) A(nnotator)');
+        $window->set_title('Linia');
     }
     
     return;
