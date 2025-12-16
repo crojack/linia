@@ -8,7 +8,6 @@ use strict;
 use warnings;
 use 5.10.1;
 
-# Warning suppression for Gtk3/Glib noise
 BEGIN {
     $SIG{__WARN__} = sub {
         my $message = shift;
@@ -52,6 +51,7 @@ use File::HomeDir;
 use Carp;
 
 # --- Data Structures ---
+
 my %items = (
     'lines' => [],
     'dashed-lines' => [],
@@ -81,6 +81,7 @@ my %line_styles = (
 );
 
 # --- Application State ---
+
 my $global_timestamp = 0;
 my $current_line_style = 'solid';
 my $save_counter = 1;
@@ -92,19 +93,28 @@ my @undo_stack = ();
 my @redo_stack = ();
 
 # --- Drawing State ---
+
 my @freehand_points = ();
 my $last_tool_fill_color;
 my $last_tool_stroke_color;
 my $last_tool_line_width;
 my $clipboard_item = undef;
 my $clipboard_action = '';
+my $drop_shadow_enabled = 0; 
+my $shadow_offset_x = 3;   
+my $shadow_offset_y = 3;   
+my $shadow_blur = 3;       
+my $shadow_alpha = 0.35;
+my $shadow_base_color = Gtk3::Gdk::RGBA->new(0, 0, 0, 1.0);
 
 # --- Visual Effects ---
+
 my $dimming_level = 0;
 my $fill_transparency_level = 0.25;
 my $stroke_transparency_level = 1.0;
 
 # --- Interaction State ---
+
 my $hovered_handle = undef;
 my $active_handle = undef;
 my $is_zoom_fit_best = 0;
@@ -116,6 +126,7 @@ my $dragging = 0;
 my $drag_handle = undef;
 
 # --- UI Elements & Config ---
+
 my $main_toolbar;
 my $widget_toolbar;
 my $main_toolbar_icon_size = 32;
@@ -132,6 +143,7 @@ my @selected_items = ();
 my $is_multi_selecting = 0;
 
 # --- Image & Canvas ---
+
 my $current_image = undef;
 my $image_surface = undef;
 my $preview_surface = undef;
@@ -142,6 +154,7 @@ my $initial_scale_factor = 1.0;
 my ($original_width, $original_height);
 
 # --- Coordinates ---
+
 my ($start_x, $start_y) = (0, 0);
 my ($end_x, $end_y) = (0, 0);
 my ($last_x, $last_y) = (0, 0);
@@ -151,6 +164,7 @@ my $pan_start_scroll_x = 0;
 my $pan_start_scroll_y = 0;
 
 # --- Tool State ---
+
 my $current_mode = 'select';
 my $current_tool = 'select';
 my $last_tool = undef;
@@ -159,10 +173,12 @@ my $current_new_item = undef;
 my $numbered_circle_number = undef;
 
 # --- Performance ---
+
 my $is_zooming_active = 0;
 my $zoom_end_timeout = undef;
 
 # --- Settings ---
+
 my $window_width = 1100;
 my $window_height = 800;
 my $initial_tool = 'select';
@@ -177,6 +193,7 @@ my $line_width = 3.0;
 my $icon_theme = 'color';
 
 # --- Paths ---
+
 my @recent_files;
 my $max_recent_files = 10;
 my $recent_files_file = "$ENV{HOME}/.config/linia/recent_files.txt";
@@ -185,10 +202,12 @@ my $window_config_file = "$ENV{HOME}/.config/linia/window_dimensions.txt";
 my $tools_config_file = "$ENV{HOME}/.config/linia/tools_config.json";
 
 # --- Tool Buttons ---
+
 my %tool_buttons;
 my %tool_widgets;
 
 # --- Widgets ---
+
 my $dimming_adjustment;
 my $dimming_scale;
 my $fill_transparency_adjustment;
@@ -205,10 +224,12 @@ my $fill_css_provider;
 my $stroke_css_provider;
 
 # --- Text Cursor ---
+
 my $cursor_visible = 1;
 my $cursor_blink_timeout = undef;
 
 # --- Colors ---
+
 my $fill_color = Gtk3::Gdk::RGBA->new(0.21, 0.52, 0.89, 0.25);
 my $stroke_color = Gtk3::Gdk::RGBA->new(255, 0, 0, 1);
 
@@ -253,17 +274,14 @@ sub initialize_tool_state {
 # SECTION 2: UI & EVENT HANDLERS
 # =============================================================================
 
-# 1. Load Config
 load_window_dimensions();
 load_icon_sizes();
 load_tool_state();
 
-# 2. Create Main Window
 $window = Gtk3::Window->new('toplevel');
 $window->set_title('Linia - Lin(ux) I(mage) A(nnotator)');
 $window->set_default_size($window_width, $window_height);
 
-# 3. Create UI Containers (Boxes)
 $menu_bar_box = Gtk3::Box->new('horizontal', 0);
 $menu_bar_box->set_size_request(-1, 20);
 $menu_bar_box->set_halign('center');
@@ -282,7 +300,6 @@ $widget_toolbar_box->set_halign('center');
 
 $main_vbox = Gtk3::Box->new('vertical', 0);
 
-# 4. Create Drawing Area
 $drawing_area = Gtk3::DrawingArea->new;
 $drawing_area->set_can_focus(TRUE);
 $drawing_area->grab_focus();
@@ -299,10 +316,10 @@ $drawing_area->add_events([
     'focus-change-mask'
 ]);
 
-# 5. Setup Toolbars & Menu Widgets
 $menu_bar = Gtk3::MenuBar->new();
 
 # --- File Menu Setup ---
+
 my $file_menu = Gtk3::MenuItem->new_with_mnemonic('_File');
 my $file_menu_item = Gtk3::Menu->new();
 $file_menu->set_submenu($file_menu_item);
@@ -352,6 +369,7 @@ $file_menu_item->append($close_image_item);
 $file_menu_item->append($exit_item);
 
 # --- Edit Menu Setup ---
+
 my $edit_menu = Gtk3::MenuItem->new_with_mnemonic('_Edit');
 my $edit_menu_item = Gtk3::Menu->new();
 $edit_menu->set_submenu($edit_menu_item);
@@ -397,6 +415,7 @@ $edit_menu_item->append(Gtk3::SeparatorMenuItem->new());
 $edit_menu_item->append($settings_item);
 
 # --- View Menu Setup ---
+
 my $view_menu = Gtk3::MenuItem->new_with_mnemonic('_View');
 my $view_menu_item = Gtk3::Menu->new();
 $view_menu->set_submenu($view_menu_item);
@@ -475,7 +494,6 @@ $view_menu_item->append($move_drawing_toolbar);
 $view_menu_item->append(Gtk3::SeparatorMenuItem->new());
 $view_menu_item->append($toggle_main_toolbar);
 
-# Zoom Items
 my $zoom_in_item = Gtk3::MenuItem->new_with_mnemonic('Zoom _In');
 $zoom_in_item->signal_connect('activate' => \&zoom_in);
 my $zoom_out_item = Gtk3::MenuItem->new_with_mnemonic('Zoom _Out');
@@ -491,7 +509,6 @@ $view_menu_item->append($zoom_out_item);
 $view_menu_item->append($zoom_original_item);
 $view_menu_item->append($zoom_fit_item);
 
-# Icon Size Menus
 $view_menu_item->append(Gtk3::SeparatorMenuItem->new());
 my $main_icon_size_menu_item = Gtk3::MenuItem->new_with_mnemonic('_Main Toolbar Icon Size');
 my $main_icon_size_menu = Gtk3::Menu->new();
@@ -525,6 +542,7 @@ foreach my $size (@icon_sizes) {
 $view_menu_item->append($drawing_icon_size_menu_item);
 
 # --- Help Menu ---
+
 my $help_menu = Gtk3::MenuItem->new_with_mnemonic('_Help');
 my $help_menu_item = Gtk3::Menu->new();
 $help_menu->set_submenu($help_menu_item);
@@ -548,7 +566,6 @@ $menu_bar->append($edit_menu);
 $menu_bar->append($view_menu);
 $menu_bar->append($help_menu);
 
-# 6. Setup Toolbars
 $main_toolbar = Gtk3::Toolbar->new();
 $main_toolbar->set_style('icons');
 $main_toolbar->set_show_arrow(FALSE);
@@ -567,6 +584,7 @@ $widget_toolbar->set_style('icons');
 $widget_toolbar->set_show_arrow(TRUE);
 
 # --- Populate Main Toolbar ---
+
 my @main_toolbar_items = (
     { name => "image-open", label => "Open Image", tooltip => "Open image", group => "tools" },
     { name => "image-open-recent", label => "Open Recent", tooltip => "Open recent image", group => "tools", is_widget => 1 },
@@ -588,7 +606,7 @@ my @main_toolbar_items = (
     { name => "exit", label => "Exit", tooltip => "Exit application", group => "tools" },
 );
 
-my @separator_after = qw(image-close redo paste delete zoom-fit-best save-as print);
+my @separator_after = qw(image-open image-open-recent svg-import image-close undo redo copy cut paste clear delete zoom-in zoom-out zoom-fit-best save-as print exit);
 
 foreach my $item (@main_toolbar_items) {
     if ($item->{is_widget}) {
@@ -621,6 +639,7 @@ foreach my $item (@main_toolbar_items) {
 }
 
 # --- Populate Drawing Toolbar ---
+
 my @drawing_toolbar_items = (
     { name => "select", label => "Select", tooltip => "Select area", group => "tools" },
     { type => "separator" },
@@ -675,6 +694,7 @@ foreach my $item (@drawing_toolbar_items) {
 }
 
 # --- Populate Widget Toolbar ---
+
 $line_style_combo = Gtk3::ComboBoxText->new();
 foreach my $style_id (sort keys %line_styles) { $line_style_combo->append($style_id, $line_styles{$style_id}{name}); }
 $line_style_combo->set_active_id('solid');
@@ -792,6 +812,44 @@ $dim_box->pack_start(Gtk3::Label->new('Dim: '), FALSE, FALSE, 0);
 $dim_box->pack_start($dimming_scale, FALSE, FALSE, 0);
 $dim_item->add($dim_box);
 
+my $shadow_check = Gtk3::CheckButton->new_with_label('Shadow');
+$shadow_check->set_active($drop_shadow_enabled);
+$shadow_check->set_tooltip_text('Toggle drop shadow for selected item.');
+
+$shadow_check->signal_connect('toggled' => sub {
+    $drop_shadow_enabled = $shadow_check->get_active();
+    my @targets = @selected_items ? @selected_items : ($current_item ? ($current_item) : ());
+    
+    foreach my $item (@targets) {
+        next unless $item->{selected};
+        store_state_for_undo('modify', clone_item($item));
+        $item->{drop_shadow} = $drop_shadow_enabled;
+        $item->{shadow_offset_x} = $shadow_offset_x;
+        $item->{shadow_offset_y} = $shadow_offset_y;
+        $item->{shadow_blur} = $shadow_blur;
+        $item->{shadow_alpha} = $shadow_alpha;
+        $item->{shadow_color} = $shadow_base_color->copy();
+    }
+    
+    $drawing_area->queue_draw() if @targets;
+});
+
+my $shadow_settings_btn = Gtk3::Button->new_from_icon_name('preferences-system-symbolic', 'menu');
+$shadow_settings_btn->set_relief('none');
+$shadow_settings_btn->set_tooltip_text('Configure drop shadow properties.');
+
+$shadow_settings_btn->signal_connect('clicked' => sub {
+  
+    show_shadow_settings_dialog($window);
+});
+
+my $shadow_box = Gtk3::Box->new('horizontal', 2);
+$shadow_box->pack_start($shadow_check, FALSE, FALSE, 0);
+$shadow_box->pack_start($shadow_settings_btn, FALSE, FALSE, 0);
+
+my $shadow_item = Gtk3::ToolItem->new();
+$shadow_item->add($shadow_box);
+
 $widget_toolbar->insert($style_item, -1);
 $widget_toolbar->insert($width_item, -1);
 $widget_toolbar->insert($fill_item, -1);
@@ -800,8 +858,8 @@ $widget_toolbar->insert($stroke_item, -1);
 $widget_toolbar->insert(create_stroke_transparency_slider(), -1);
 $widget_toolbar->insert($font_item, -1);
 $widget_toolbar->insert($dim_item, -1);
+$widget_toolbar->insert($shadow_item, -1);
 
-# 7. Pack Widgets
 $menu_bar_box->pack_start($menu_bar, TRUE, TRUE, 0);
 $main_toolbar_box->pack_start($main_toolbar, TRUE, TRUE, 0);
 $drawing_toolbar_box->pack_start($drawing_toolbar, TRUE, TRUE, 0);
@@ -818,7 +876,6 @@ $main_vbox->pack_start($scrolled_window, TRUE, TRUE, 0);
 initialize_tool_state();
 $window->add($main_vbox);
 
-# 8. Connect Events & Controllers
 
 sub handle_tool_selection {
     my ($tool_item, $tool_name) = @_;
@@ -1093,7 +1150,9 @@ $drawing_area->signal_connect('key-press-event' => sub {
 
     if ($keyval == Gtk3::Gdk::KEY_Delete) {
         if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
-
+            cleanup_text_editing($current_item);
+            delete_item();
+            return TRUE;
         }
         elsif ($current_item && $current_item->{selected}) {
             delete_item();
@@ -1104,6 +1163,34 @@ $drawing_area->signal_connect('key-press-event' => sub {
     if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
         if ($keyval == Gtk3::Gdk::KEY_Escape) {
             cleanup_text_editing($current_item);
+            return TRUE;
+        }
+        elsif ($keyval == Gtk3::Gdk::KEY_Left) {
+            my @lines = split("\n", $current_item->{text});
+            my $curr_line = $lines[$current_item->{current_line}] // '';
+            
+            if ($current_item->{current_column} > 0) {
+                $current_item->{current_column}--;
+            } elsif ($current_item->{current_line} > 0) {
+                $current_item->{current_line}--;
+                my $prev_line = $lines[$current_item->{current_line}] // '';
+                $current_item->{current_column} = length($prev_line);
+            }
+            $widget->queue_draw();
+            return TRUE;
+        }
+        elsif ($keyval == Gtk3::Gdk::KEY_Right) {
+            my @lines = split("\n", $current_item->{text});
+            my $curr_line = $lines[$current_item->{current_line}] // '';
+            my $line_length = length($curr_line);
+            
+            if ($current_item->{current_column} < $line_length) {
+                $current_item->{current_column}++;
+            } elsif ($current_item->{current_line} < scalar(@lines) - 1) {
+                $current_item->{current_line}++;
+                $current_item->{current_column} = 0;
+            }
+            $widget->queue_draw();
             return TRUE;
         }
         elsif ($keyval == Gtk3::Gdk::KEY_Return || $keyval == Gtk3::Gdk::KEY_KP_Enter) {
@@ -1308,7 +1395,35 @@ $drawing_area->signal_connect('button-press-event' => sub {
     if ($event->button == 2) { start_panning($event->x_root, $event->y_root); return TRUE; }
 
     if ($event->button == 1) {
+ 
+        if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
+            if (is_point_in_text($x, $y, $current_item)) {
+                set_cursor_position_from_click($current_item, $x, $y);
+                $widget->queue_draw();
+                return TRUE;
+            }
+        }
+        
         if ($current_item && $current_item->{selected}) {
+
+            if ($current_item->{type} eq 'text') {
+                my $text_handle = get_text_handle($x, $y, $current_item);
+                if (defined $text_handle && $text_handle eq 'drag') {
+                    $dragging = 1;
+                    $drag_handle = 'drag';
+                    return TRUE;
+                } elsif (defined $text_handle && $text_handle eq 'body') {
+                    if (!$current_item->{is_editing}) {
+                        $current_item->{is_editing} = 1;
+                        $is_text_editing = 1;
+                        start_cursor_blink();
+                    }
+                    set_cursor_position_from_click($current_item, $x, $y);
+                    $widget->queue_draw();
+                    return TRUE;
+                }
+            }
+            
             my $handle = undef;
             if ($current_item->{type} eq 'crop_rect' || $current_item->{type} eq 'rectangle' || $current_item->{type} eq 'pixelize') {
                 $handle = get_rectangle_handle($x, $y, $current_item);
@@ -1323,7 +1438,9 @@ $drawing_area->signal_connect('button-press-event' => sub {
             } elsif ($current_item->{type} eq 'cuboid') {
                 $handle = get_cuboid_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'text') {
-                $handle = get_text_handle($x, $y, $current_item);
+                if (is_point_in_text($x, $y, $current_item)) {
+                    $handle = 'body';
+                }
             } elsif ($current_item->{type} eq 'magnifier') {
                 $handle = get_circle_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'svg') {
@@ -1462,6 +1579,29 @@ $drawing_area->signal_connect('motion-notify-event' => sub {
             return TRUE;
         }
     }
+    
+    my $window = $widget->get_window();
+    if ($window) {
+        my $should_show_hand = 0;
+        
+        if ($current_item && $current_item->{type} eq 'text' && $current_item->{selected}) {
+            my $text_handle = get_text_handle($curr_x, $curr_y, $current_item);
+            if (defined $text_handle && $text_handle eq 'drag') {
+                $should_show_hand = 1;
+            }
+        }
+        
+        if ($should_show_hand) {
+            my $cursor = Gtk3::Gdk::Cursor->new_for_display(
+                $window->get_display(),
+                'hand1'
+            );
+            $window->set_cursor($cursor);
+        } elsif (!$dragging && !$is_panning) {
+            $window->set_cursor(undef);
+        }
+    }
+    
     return TRUE;
 });
 
@@ -1592,7 +1732,6 @@ $drawing_area->signal_connect('button-release-event' => sub {
 # SECTION 3: FINAL INITIALIZATION & STARTUP
 # =============================================================================
 
-# 1. Load history
 load_recent_files();
 update_recent_files_menu();
 update_undo_redo_ui();
@@ -1761,6 +1900,9 @@ sub load_image_file {
 
            update_drawing_area_size();
            $drawing_area->queue_draw();
+           
+           my $display_name = basename($filename);
+           $window->set_title("Linia - $display_name");
        }
 
        add_recent_file($filename) if $image_surface;
@@ -1818,6 +1960,8 @@ sub close_image {
         $drawing_area->queue_resize();
         $drawing_area->queue_draw();
         $project_is_modified = 0;
+        
+        $window->set_title('Linia - Lin(ux) I(mage) A(nnotator)');
     }
     
     return;
@@ -1840,10 +1984,8 @@ sub save_image_as {
     my $date_format;
 
     if ($lang =~ /US/i) {
-        # USA: Month-Day-Year-Hour_Minute (e.g. dec-03-2025-14_08)
         $date_format = "%b-%d-%Y-%H_%M";
     } else {
-        # Europe/Default: Day-Month-Year-Hour_Minute (e.g. 03-dec-2025-14_08)
         $date_format = "%d-%b-%Y-%H_%M";
     }
 
@@ -1860,6 +2002,7 @@ sub save_image_as {
         'gtk-save'   => 'accept'
     );
 
+    $dialog->set_do_overwrite_confirmation(TRUE);
     $dialog->set_current_name($suggested_name . ".png");
 
     my $png_filter = Gtk3::FileFilter->new();
@@ -1961,51 +2104,7 @@ sub save_image_as {
                 my $was_selected = $item->{selected};
                 $item->{selected} = 0;
 
-                if ($item->{type} eq 'text') {
-                    draw_text($cr, $item);
-                }
-                elsif ($item->{type} eq 'rectangle') {
-                    draw_rectangle($cr, $item->{x1}, $item->{y1}, $item->{x2}, $item->{y2}, $item->{stroke_color}, $item->{fill_color}, $item->{line_width}, $item);
-                }
-                elsif ($item->{type} eq 'ellipse') {
-                    draw_ellipse($cr, $item->{x1}, $item->{y1}, $item->{x2}, $item->{y2}, $item->{stroke_color}, $item->{fill_color}, $item->{line_width}, $item);
-                }
-                elsif ($item->{type} eq 'line') {
-                    draw_line($cr, $item->{start_x}, $item->{start_y}, $item->{end_x}, $item->{end_y}, $item->{stroke_color}, $item->{line_width}, $item);
-                }
-                elsif ($item->{type} =~ /^(single-arrow|double-arrow)$/) {
-                    draw_arrow($cr, $item->{start_x}, $item->{start_y}, $item->{end_x}, $item->{end_y}, $item->{stroke_color}, $item->{line_width}, $item);
-                }
-                elsif ($item->{type} eq 'freehand' || $item->{type} eq 'highlighter') {
-                    draw_freehand_line($cr, $item->{points}, $item->{stroke_color}, $item->{line_width}, $item);
-                }
-                elsif ($item->{type} eq 'triangle') {
-                    draw_triangle($cr, $item);
-                }
-                elsif ($item->{type} eq 'tetragon') {
-                    draw_tetragon($cr, $item);
-                }
-                elsif ($item->{type} eq 'pentagon') {
-                    draw_pentagon($cr, $item);
-                }
-                elsif ($item->{type} eq 'pyramid') {
-                    draw_pyramid($cr, $item);
-                }
-                elsif ($item->{type} eq 'cuboid') {
-                    draw_cuboid($cr, $item);
-                }
-                elsif ($item->{type} eq 'numbered-circle') {
-                    draw_numbered_circle($cr, $item);
-                }
-                elsif ($item->{type} eq 'svg') {
-                    draw_svg_item($cr, $item);
-                }
-                elsif ($item->{type} eq 'pixelize') {
-                    draw_pixelize($cr, $item);
-                }
-                elsif ($item->{type} eq 'magnifier') {
-                    draw_magnifier($cr, $item);
-                }
+                draw_item($cr, $item, 0);
 
                 $item->{selected} = $was_selected;
             }
@@ -2071,6 +2170,7 @@ sub save_project_as {
         'gtk-save'   => 'accept'
     );
     
+    $dialog->set_do_overwrite_confirmation(TRUE);
     $dialog->set_current_name("project.linia");
     
     my $linia_filter = Gtk3::FileFilter->new();
@@ -2092,7 +2192,10 @@ sub save_project_as {
             close $fh;
             
             $project_is_modified = 0; 
-            $success = 1;      
+            $success = 1;
+            
+            my $display_name = basename($filename);
+            $window->set_title("Linia - $display_name");
         } else {
             warn "Could not save project: $!";
         }
@@ -2181,6 +2284,9 @@ sub open_project {
             update_drawing_area_size();
             $drawing_area->queue_draw();
             $project_is_modified = 0;
+            
+            my $display_name = basename($filename);
+            $window->set_title("Linia - $display_name");
         }
     }
     $dialog->destroy();
@@ -2241,6 +2347,9 @@ sub prepare_items_for_save {
             }
             if ($copy->{fill_color}) {
                 $copy->{fill_color} = color_to_hash($copy->{fill_color});
+            }
+            if ($copy->{shadow_color}) {
+                $copy->{shadow_color} = color_to_hash($copy->{shadow_color});
             }
 
             delete $copy->{pixelated_surface}; 
@@ -2304,6 +2413,9 @@ sub restore_items_from_load {
             }
             if ($item->{fill_color}) {
                 $item->{fill_color} = hash_to_color($item->{fill_color});
+            }
+            if ($item->{shadow_color}) {
+                $item->{shadow_color} = hash_to_color($item->{shadow_color});
             }
 
             if ($item->{type} eq 'svg' && $item->{svg_content}) {
@@ -2780,6 +2892,15 @@ sub create_line {
         selected => 1,
         is_curved => 0
     };
+    
+    if ($drop_shadow_enabled) {
+        $line->{drop_shadow}     = 1;
+        $line->{shadow_offset_x} = $shadow_offset_x;
+        $line->{shadow_offset_y} = $shadow_offset_y;
+        $line->{shadow_blur}     = $shadow_blur;
+        $line->{shadow_alpha}    = $shadow_alpha;
+        $line->{shadow_color}    = $shadow_base_color->copy();
+    }
 
     $items{lines} = [] unless exists $items{lines};
     push @{$items{lines}}, $line;
@@ -2806,6 +2927,16 @@ sub create_arrow {
         is_curved => 0,
         style => $current_tool eq 'double-arrow' ? 'Double Arrow' : 'Single Arrow'
     };
+    
+    if ($drop_shadow_enabled) {
+        $arrow->{drop_shadow}     = 1;
+        $arrow->{shadow_offset_x} = $shadow_offset_x;
+        $arrow->{shadow_offset_y} = $shadow_offset_y;
+        $arrow->{shadow_blur}     = $shadow_blur;
+        $arrow->{shadow_alpha}    = $shadow_alpha;
+        $arrow->{shadow_color}    = $shadow_base_color->copy();
+    }
+    
     $current_item = $arrow;
     return $arrow;
 }
@@ -2825,6 +2956,16 @@ sub create_rectangle {
         line_style => $current_line_style,
         selected => 1
     };
+    
+    if ($drop_shadow_enabled) {
+        $rectangle->{drop_shadow}     = 1;
+        $rectangle->{shadow_offset_x} = $shadow_offset_x;
+        $rectangle->{shadow_offset_y} = $shadow_offset_y;
+        $rectangle->{shadow_blur}     = $shadow_blur;
+        $rectangle->{shadow_alpha}    = $shadow_alpha;
+        $rectangle->{shadow_color}    = $shadow_base_color->copy();
+    }
+    
     push @{$items{rectangles}}, $rectangle;
     $current_item = $rectangle;
     return $rectangle;
@@ -2845,6 +2986,16 @@ sub create_ellipse {
         line_style => $current_line_style,
         selected => 1
     };
+    
+    if ($drop_shadow_enabled) {
+        $ellipse->{drop_shadow}     = 1;
+        $ellipse->{shadow_offset_x} = $shadow_offset_x;
+        $ellipse->{shadow_offset_y} = $shadow_offset_y;
+        $ellipse->{shadow_blur}     = $shadow_blur;
+        $ellipse->{shadow_alpha}    = $shadow_alpha;
+        $ellipse->{shadow_color}    = $shadow_base_color->copy();
+    }
+    
     push @{$items{ellipses}}, $ellipse;
     $current_item = $ellipse;
     return $ellipse;
@@ -2874,6 +3025,15 @@ sub create_triangle {
         line_style => $current_line_style,
         selected => 1
     };
+    
+    if ($drop_shadow_enabled) {
+        $triangle->{drop_shadow}     = 1;
+        $triangle->{shadow_offset_x} = $shadow_offset_x;
+        $triangle->{shadow_offset_y} = $shadow_offset_y;
+        $triangle->{shadow_blur}     = $shadow_blur;
+        $triangle->{shadow_alpha}    = $shadow_alpha;
+        $triangle->{shadow_color}    = $shadow_base_color->copy();
+    }
 
     update_triangle_midpoints($triangle);
     return $triangle;
@@ -2908,6 +3068,15 @@ sub create_tetragon {
         selected => 1,
         is_dragging => 0
     };
+    
+    if ($drop_shadow_enabled) {
+        $tetragon->{drop_shadow}     = 1;
+        $tetragon->{shadow_offset_x} = $shadow_offset_x;
+        $tetragon->{shadow_offset_y} = $shadow_offset_y;
+        $tetragon->{shadow_blur}     = $shadow_blur;
+        $tetragon->{shadow_alpha}    = $shadow_alpha;
+        $tetragon->{shadow_color}    = $shadow_base_color->copy();
+    }
 
     update_tetragon_midpoints($tetragon);
 
@@ -2948,6 +3117,15 @@ sub create_pentagon {
         selected => 1,
         is_dragging => 0
     };
+    
+    if ($drop_shadow_enabled) {
+        $pentagon->{drop_shadow}     = 1;
+        $pentagon->{shadow_offset_x} = $shadow_offset_x;
+        $pentagon->{shadow_offset_y} = $shadow_offset_y;
+        $pentagon->{shadow_blur}     = $shadow_blur;
+        $pentagon->{shadow_alpha}    = $shadow_alpha;
+        $pentagon->{shadow_color}    = $shadow_base_color->copy();
+    }
 
     update_pentagon_midpoints($pentagon);
     return $pentagon;
@@ -2980,7 +3158,7 @@ sub create_pyramid {
         line_width => $line_width,
         line_style => $current_line_style,
         selected => 0,
-        timestamp => ++$global_timestamp #
+        timestamp => ++$global_timestamp
     };
 
     my %faces = (
@@ -3041,12 +3219,21 @@ sub create_pyramid {
     $pyramid->{faces} = \%faces;
 
     $pyramid->{vertices} = [
-        [$base_left, $base_front],      # base corner 1
-        [$base_right, $base_front],     # base corner 2  
-        [$base_right, $base_back],      # base corner 3
-        [$base_left, $base_back],       # base corner 4
-        [$apex_x, $apex_y]              # apex (2D projection)
+        [$base_left, $base_front],
+        [$base_right, $base_front],
+        [$base_right, $base_back],
+        [$base_left, $base_back],
+        [$apex_x, $apex_y]
     ];
+    
+    if ($drop_shadow_enabled) {
+        $pyramid->{drop_shadow}     = 1;
+        $pyramid->{shadow_offset_x} = $shadow_offset_x;
+        $pyramid->{shadow_offset_y} = $shadow_offset_y;
+        $pyramid->{shadow_blur}     = $shadow_blur;
+        $pyramid->{shadow_alpha}    = $shadow_alpha;
+        $pyramid->{shadow_color}    = $shadow_base_color->copy();
+    }
     
     update_pyramid_geometry($pyramid);
     
@@ -3161,15 +3348,25 @@ sub create_cuboid {
     $cuboid->{faces} = \%faces;
 
     $cuboid->{vertices} = [
-        [$front_left, $front_top],      # front top-left
-        [$front_right, $front_top],     # front top-right
-        [$front_right, $front_bottom],  # front bottom-right
-        [$front_left, $front_bottom],   # front bottom-left
-        [$back_left, $back_top],        # back top-left
-        [$back_right, $back_top],       # back top-right
-        [$back_right, $back_bottom],    # back bottom-right
-        [$back_left, $back_bottom]      # back bottom-left
+        [$front_left, $front_top],
+        [$front_right, $front_top],
+        [$front_right, $front_bottom],
+        [$front_left, $front_bottom],
+        [$back_left, $back_top],
+        [$back_right, $back_top],
+        [$back_right, $back_bottom],
+        [$back_left, $back_bottom]
     ];
+    
+    if ($drop_shadow_enabled) {
+        $cuboid->{drop_shadow}     = 1;
+        $cuboid->{shadow_offset_x} = $shadow_offset_x;
+        $cuboid->{shadow_offset_y} = $shadow_offset_y;
+        $cuboid->{shadow_blur}     = $shadow_blur;
+        $cuboid->{shadow_alpha}    = $shadow_alpha;
+        $cuboid->{shadow_color}    = $shadow_base_color->copy();
+    }
+    
     update_cuboid_faces($cuboid);
     return $cuboid;
 }
@@ -3200,6 +3397,15 @@ sub create_text_item {
         current_column => 0,
         handles => {}
     };
+    
+    if ($drop_shadow_enabled) {
+        $text_item->{drop_shadow}     = 1;
+        $text_item->{shadow_offset_x} = $shadow_offset_x;
+        $text_item->{shadow_offset_y} = $shadow_offset_y;
+        $text_item->{shadow_blur}     = $shadow_blur;
+        $text_item->{shadow_alpha}    = $shadow_alpha;
+        $text_item->{shadow_color}    = $shadow_base_color->copy(); 
+    }
 
     push @{$items{text_items}}, $text_item;
     $current_item = $text_item;
@@ -3235,6 +3441,15 @@ sub create_numbered_circle {
         font_size => $font_size,      
         font_style => $font_style
     };
+    
+    if ($drop_shadow_enabled) {
+        $circle->{drop_shadow}     = 1;
+        $circle->{shadow_offset_x} = $shadow_offset_x;
+        $circle->{shadow_offset_y} = $shadow_offset_y;
+        $circle->{shadow_blur}     = $shadow_blur;
+        $circle->{shadow_alpha}    = $shadow_alpha;
+        $circle->{shadow_color}    = $shadow_base_color->copy();
+    }
 
     push @{$items{'numbered-circles'}}, $circle;
     $current_item = $circle;
@@ -3725,10 +3940,324 @@ sub draw_image {
 
 # Dispatcher:
 
+sub draw_shadow {
+    my ($cr, $item) = @_;
+    
+    return unless $item->{drop_shadow};
+
+    my $offset_x = $item->{shadow_offset_x} // $shadow_offset_x;
+    my $offset_y = $item->{shadow_offset_y} // $shadow_offset_y;
+    my $alpha    = $item->{shadow_alpha} // $shadow_alpha;
+    my $blur_radius = $item->{shadow_blur} // $shadow_blur;
+    my $line_w   = $item->{line_width} // 3; 
+    my $base_color;
+    if ($item->{shadow_color}) {
+        $base_color = $item->{shadow_color};
+    } else {
+        $base_color = $shadow_base_color;
+    }
+
+    $cr->save();
+    
+    my $should_clip = ($item->{type} =~ /^(rectangle|ellipse|triangle|tetragon|pentagon|numbered-circle)$/);
+    
+    if ($should_clip) {
+        my $large_size = 100000;
+        $cr->rectangle(-$large_size, -$large_size, $large_size * 2, $large_size * 2);
+        
+        if ($item->{type} eq 'rectangle') {
+            my $x = min($item->{x1}, $item->{x2});
+            my $y = min($item->{y1}, $item->{y2});
+            my $width = abs($item->{x2} - $item->{x1});
+            my $height = abs($item->{y2} - $item->{y1});
+            $cr->rectangle($x, $y, $width, $height);
+            
+        } elsif ($item->{type} eq 'ellipse') {
+            my $center_x = ($item->{x1} + $item->{x2}) / 2;
+            my $center_y = ($item->{y1} + $item->{y2}) / 2;
+            my $radius_x = abs($item->{x2} - $item->{x1}) / 2;
+            my $radius_y = abs($item->{y2} - $item->{y1}) / 2;
+            
+            $cr->save();
+            $cr->translate($center_x, $center_y);
+            $cr->scale($radius_x, $radius_y);
+            $cr->arc(0, 0, 1, 0, 2 * 3.14159);
+            $cr->restore();
+            
+        } elsif ($item->{type} eq 'numbered-circle') {
+            $cr->arc($item->{x}, $item->{y}, $item->{radius}, 0, 2 * pi);
+            
+        } elsif ($item->{type} =~ /^(triangle|tetragon|pentagon)$/ && $item->{vertices}) {
+            $cr->move_to(@{$item->{vertices}[0]});
+            for my $i (1 .. $#{$item->{vertices}}) {
+                $cr->line_to(@{$item->{vertices}[$i]});
+            }
+            $cr->close_path();
+        }
+        
+        $cr->set_fill_rule('even-odd');
+        $cr->clip();
+    }
+
+    my $blur_iterations = $blur_radius > 0 ? int($blur_radius * 2 + 1) : 1;
+    my $blur_step = $blur_radius > 0 ? $blur_radius / ($blur_iterations - 1) : 0;
+    
+    for (my $i = 0; $i < $blur_iterations; $i++) {
+        $cr->save();
+        
+        my $blur_offset = $blur_radius > 0 ? -$blur_radius + ($i * $blur_step * 2) : 0;
+        my $iteration_alpha = $blur_iterations > 1 ? $alpha / $blur_iterations : $alpha;
+        
+        $cr->set_source_rgba(
+            $base_color->red, 
+            $base_color->green, 
+            $base_color->blue, 
+            $iteration_alpha 
+        );
+
+        $cr->set_line_width($line_w * 1.5); 
+        $cr->set_line_join('round');
+        $cr->set_line_cap('round');
+        $cr->set_dash(0); 
+
+        $cr->translate($offset_x + $blur_offset, $offset_y + $blur_offset);
+        $cr->new_path();
+
+        my $shape_drawn = 0;
+        
+        if ($item->{type} eq 'text') {
+            my $layout = Pango::Cairo::create_layout($cr);
+            my $desc = Pango::FontDescription->from_string($item->{font});
+            $layout->set_font_description($desc);
+            
+            my @lines = split("\n", $item->{text});
+            my $y_offset = 0;
+            
+            foreach my $line (@lines) {
+                $layout->set_text($line || ' ');
+                my (undef, $height) = $layout->get_pixel_size();
+                $cr->move_to($item->{x}, $item->{y} + $y_offset);
+                Pango::Cairo::show_layout($cr, $layout);
+                $y_offset += $height;
+            }
+            $cr->fill();
+            $shape_drawn = 1;
+
+        } elsif ($item->{type} eq 'rectangle') {
+            my $x = min($item->{x1}, $item->{x2});
+            my $y = min($item->{y1}, $item->{y2});
+            my $width = abs($item->{x2} - $item->{x1});
+            my $height = abs($item->{y2} - $item->{y1});
+            $cr->rectangle($x, $y, $width, $height);
+            $shape_drawn = 3;
+
+        } elsif ($item->{type} eq 'ellipse') {
+            my $center_x = ($item->{x1} + $item->{x2}) / 2;
+            my $center_y = ($item->{y1} + $item->{y2}) / 2;
+            my $radius_x = abs($item->{x2} - $item->{x1}) / 2;
+            my $radius_y = abs($item->{y2} - $item->{y1}) / 2;
+            
+            $cr->save();
+            $cr->translate($center_x, $center_y);
+            $cr->scale($radius_x, $radius_y);
+            $cr->arc(0, 0, 1, 0, 2 * 3.14159);
+            $cr->restore();
+            
+            $shape_drawn = 3;
+
+        } elsif ($item->{type} =~ /^(line|single-arrow|double-arrow)$/) {
+            
+            if ($item->{line_style} && exists $line_styles{$item->{line_style}}) {
+                my $pattern = $line_styles{$item->{line_style}}{pattern};
+                if (@$pattern) {
+                    my @scaled_pattern = map { $_ * $line_w } @$pattern;
+                    $cr->set_dash(0, @scaled_pattern);
+                }
+            }
+            
+            my $arrow_length = $line_w * 7;
+            my $arrow_angle = 0.4;
+            
+            my $is_arrow = ($item->{type} =~ /arrow$/);
+            
+            my $is_curved = $item->{is_curved} && defined $item->{control_x} && defined $item->{control_y};
+            
+            if ($is_arrow) {
+                my ($start_angle, $end_angle);
+                
+                if ($is_curved) {
+                    my $control_x = $item->{control_x};
+                    my $control_y = $item->{control_y};
+                    my $start_x = $item->{start_x};
+                    my $start_y = $item->{start_y};
+                    my $end_x = $item->{end_x};
+                    my $end_y = $item->{end_y};
+                    
+                    my $steps = 100;
+                    my @curve_points;
+                    for my $i (0..$steps) {
+                        my $t = $i / $steps;
+                        my $t2 = 1 - $t;
+                        my $x = $t2 * $t2 * $start_x + 2 * $t2 * $t * $control_x + $t * $t * $end_x;
+                        my $y = $t2 * $t2 * $start_y + 2 * $t2 * $t * $control_y + $t * $t * $end_y;
+                        push @curve_points, [$x, $y];
+                    }
+                    
+                    $end_angle = atan2(
+                        $curve_points[-1][1] - $curve_points[-2][1],
+                        $curve_points[-1][0] - $curve_points[-2][0]
+                    );
+                    $start_angle = atan2(
+                        $curve_points[1][1] - $curve_points[0][1],
+                        $curve_points[1][0] - $curve_points[0][0]
+                    );
+                } else {
+                    my $dx = $item->{end_x} - $item->{start_x};
+                    my $dy = $item->{end_y} - $item->{start_y};
+                    $end_angle = $start_angle = atan2($dy, $dx);
+                }
+                
+                my $start_adjust = ($item->{type} eq 'double-arrow') ? $arrow_length * 0.7 : 0;
+                my $end_adjust = $arrow_length * 0.7;
+                
+                my $adj_start_x = $item->{start_x} + cos($start_angle) * $start_adjust;
+                my $adj_start_y = $item->{start_y} + sin($start_angle) * $start_adjust;
+                my $adj_end_x = $item->{end_x} - cos($end_angle) * $end_adjust;
+                my $adj_end_y = $item->{end_y} - sin($end_angle) * $end_adjust;
+                
+                if ($is_curved) {
+                    $cr->move_to($adj_start_x, $adj_start_y);
+                    $cr->curve_to(
+                        $item->{control_x}, $item->{control_y},
+                        $item->{control_x}, $item->{control_y},
+                        $adj_end_x, $adj_end_y
+                    );
+                } else {
+                    $cr->move_to($adj_start_x, $adj_start_y);
+                    $cr->line_to($adj_end_x, $adj_end_y);
+                }
+                $cr->stroke();
+                
+                my $x1 = $item->{end_x} - $arrow_length * cos($end_angle + $arrow_angle);
+                my $y1 = $item->{end_y} - $arrow_length * sin($end_angle + $arrow_angle);
+                my $x2 = $item->{end_x} - $arrow_length * cos($end_angle - $arrow_angle);
+                my $y2 = $item->{end_y} - $arrow_length * sin($end_angle - $arrow_angle);
+                
+                $cr->move_to($item->{end_x}, $item->{end_y});
+                $cr->line_to($x1, $y1);
+                $cr->line_to($x2, $y2);
+                $cr->close_path();
+                $cr->fill();
+                
+                if ($item->{type} eq 'double-arrow') {
+                    my $x3 = $item->{start_x} + $arrow_length * cos($start_angle + $arrow_angle);
+                    my $y3 = $item->{start_y} + $arrow_length * sin($start_angle + $arrow_angle);
+                    my $x4 = $item->{start_x} + $arrow_length * cos($start_angle - $arrow_angle);
+                    my $y4 = $item->{start_y} + $arrow_length * sin($start_angle - $arrow_angle);
+                    
+                    $cr->move_to($item->{start_x}, $item->{start_y});
+                    $cr->line_to($x3, $y3);
+                    $cr->line_to($x4, $y4);
+                    $cr->close_path();
+                    $cr->fill();
+                }
+                
+                $shape_drawn = 1;
+            } else {
+                if ($is_curved) {
+                    $cr->move_to($item->{start_x}, $item->{start_y});
+                    $cr->curve_to(
+                        $item->{control_x}, $item->{control_y},
+                        $item->{control_x}, $item->{control_y},
+                        $item->{end_x}, $item->{end_y}
+                    );
+                } else {
+                    $cr->move_to($item->{start_x}, $item->{start_y});
+                    $cr->line_to($item->{end_x}, $item->{end_y});
+                }
+                $shape_drawn = 2;
+            }
+            
+            $cr->set_dash(0);
+
+        } elsif ($item->{type} eq 'pyramid' && $item->{vertices}) {
+            my $vertices = $item->{vertices};
+            if ($vertices && @$vertices >= 4) {
+                $cr->move_to(@{$vertices->[0]});
+                for my $i (1..3) {
+                    $cr->line_to(@{$vertices->[$i]});
+                }
+                $cr->close_path();
+                
+                if (@$vertices >= 5) {
+                    for my $i (0..3) {
+                        $cr->move_to(@{$vertices->[$i]});
+                        $cr->line_to(@{$vertices->[4]});
+                    }
+                }
+                $shape_drawn = 2;
+            }
+            
+        } elsif ($item->{type} eq 'cuboid' && $item->{faces}) {
+            my %edges_drawn;
+            
+            foreach my $face_name (keys %{$item->{faces}}) {
+                my $face = $item->{faces}{$face_name};
+                next unless $face && $face->{vertices};
+                my $verts = $face->{vertices};
+                next unless @$verts >= 3;
+                
+                for my $i (0..$#$verts) {
+                    my $next_i = ($i + 1) % scalar(@$verts);
+                    my ($x1, $y1) = @{$verts->[$i]};
+                    my ($x2, $y2) = @{$verts->[$next_i]};
+                    
+                    my $edge_key = join(',', sort ("$x1,$y1", "$x2,$y2"));
+                    
+                    unless ($edges_drawn{$edge_key}) {
+                        $cr->move_to($x1, $y1);
+                        $cr->line_to($x2, $y2);
+                        $edges_drawn{$edge_key} = 1;
+                    }
+                }
+            }
+            $shape_drawn = 2;
+
+        } elsif ($item->{type} eq 'numbered-circle') {
+            $cr->arc($item->{x}, $item->{y}, $item->{radius}, 0, 2 * pi);
+            $shape_drawn = 3;
+            
+        } elsif ($item->{type} =~ /^(triangle|tetragon|pentagon)$/ && $item->{vertices}) {
+            $cr->move_to(@{$item->{vertices}[0]});
+            for my $i (1 .. $#{$item->{vertices}}) {
+                $cr->line_to(@{$item->{vertices}[$i]});
+            }
+            $cr->close_path();
+            $shape_drawn = 3;
+        }
+        
+        if ($shape_drawn == 2) {
+            $cr->stroke();
+        } elsif ($shape_drawn == 3) {
+            $cr->fill();
+        }
+        
+        $cr->restore();
+    }
+    
+    $cr->restore();
+    
+    return;
+}
+
 sub draw_item {
     my ($cr, $item, $is_anchored) = @_;
 
     return unless defined $item;
+
+    if ($item->{drop_shadow}) {
+        draw_shadow($cr, $item);
+    }
 
     if ($item->{type} eq 'pixelize') {
         draw_pixelize($cr, $item);
@@ -3815,9 +4344,10 @@ sub draw_item {
     draw_measurements_on_item($cr, $item);
 
     if ($item->{selected} &&
-        !(defined $item->{anchored} && $item->{anchored}) &&
-        (!$item->{is_editing})) {
-        draw_selection_handles($cr, $item);
+        !(defined $item->{anchored} && $item->{anchored})) {
+        if ($item->{type} eq 'text' || !$item->{is_editing}) {
+            draw_selection_handles($cr, $item);
+        }
     }
     
     return;
@@ -4489,7 +5019,6 @@ sub draw_pyramid {
 
     my @faces_to_draw = (@hidden_sides, @base_face, @visible_sides);
 
-    # 4. Drawing Phase
     foreach my $item (@faces_to_draw) {
         my $name = $item->{name};
         my $v = $item->{vertices};
@@ -4797,8 +5326,18 @@ sub draw_text {
             my @lines = split("\n", $text_item->{text});
             my $current_line_text = $lines[$text_item->{current_line}] // '';
             my $text_before_cursor = substr($current_line_text, 0, $text_item->{current_column});
-            $cursor_layout->set_text($text_before_cursor || ' ');
-            my ($cursor_width, $line_height) = $cursor_layout->get_pixel_size();
+            
+            my $cursor_width = 0;
+            my $line_height = 20;
+            
+            if ($text_before_cursor) {
+                $cursor_layout->set_text($text_before_cursor);
+                ($cursor_width, $line_height) = $cursor_layout->get_pixel_size();
+            } else {
+                $cursor_layout->set_text(' ');
+                (undef, $line_height) = $cursor_layout->get_pixel_size();
+                $cursor_width = 0;
+            }
 
             my $cursor_y = $text_item->{y} + ($line_height * $text_item->{current_line});
             my $cursor_x = $text_item->{x} + $cursor_width;
@@ -5237,7 +5776,7 @@ sub draw_selection_handles {
             draw_handle($cr, $pos->[1], $pos->[2], $pos->[0]);
         }
     }
-    elsif ($item->{type} eq 'text' && !$item->{is_editing}) {
+    elsif ($item->{type} eq 'text') {
         my $box_x = $item->{x};
         my $box_y = $item->{y};
         my $box_width = $item->{width};
@@ -5250,20 +5789,60 @@ sub draw_selection_handles {
         $cr->rectangle($box_x, $box_y, $box_width, $box_height);
         $cr->stroke();
         $cr->set_dash(0);
-
-        my @handle_positions = (
-            ['nw', $box_x, $box_y],
-            ['ne', $box_x + $box_width, $box_y],
-            ['se', $box_x + $box_width, $box_y + $box_height],
-            ['sw', $box_x, $box_y + $box_height],
-            ['n', $box_x + $box_width/2, $box_y],
-            ['e', $box_x + $box_width, $box_y + $box_height/2],
-            ['s', $box_x + $box_width/2, $box_y + $box_height],
-            ['w', $box_x, $box_y + $box_height/2]
+        
+        my $handle_size = 100;
+        my $handle_gap = 15;
+        my $handle_x = $box_x - $handle_size - $handle_gap;
+        my $handle_y = $box_y + ($box_height / 2);
+        
+        my @svg_paths = (
+            File::HomeDir->my_home . '/.config/linia/icons/drag-handle.svg',
+            dirname(__FILE__) . '/drag-handle.svg',
+            '/usr/share/linia/drag-handle.svg',
+            '/usr/share/linia/icons/drag-handle.svg',
+            File::HomeDir->my_home . '/.local/share/linia/drag-handle.svg',
+            '/home/claude/drag-handle.svg'
         );
-
-        foreach my $pos (@handle_positions) {
-            draw_handle($cr, $pos->[1], $pos->[2], $pos->[0]);
+        
+        my $pixbuf;
+        foreach my $svg_path (@svg_paths) {
+            if (-f $svg_path) {
+                eval {
+                    my $high_res_size = $handle_size * 3;
+                    $pixbuf = Gtk3::Gdk::Pixbuf->new_from_file_at_scale(
+                        $svg_path, $high_res_size, $high_res_size, TRUE
+                    );
+                };
+                last if $pixbuf;
+            }
+        }
+        
+        if ($pixbuf) {
+            my $icon_x = $handle_x - ($handle_size / 2);
+            my $icon_y = $handle_y - ($handle_size / 2);
+            
+            $cr->save();
+            $cr->translate($icon_x, $icon_y);
+            $cr->scale(1.0 / 3.0, 1.0 / 3.0);
+            Gtk3::Gdk::cairo_set_source_pixbuf($cr, $pixbuf, 0, 0);
+            $cr->paint();
+            $cr->restore();
+        } else {
+            $cr->set_source_rgba(1, 1, 1, 1);
+            $cr->arc($handle_x, $handle_y, $handle_size / 2, 0, 2 * 3.14159);
+            $cr->fill();
+            
+            $cr->set_source_rgba(0, 0, 0, 1);
+            $cr->set_line_width(3.0);
+            $cr->arc($handle_x, $handle_y, $handle_size / 2, 0, 2 * 3.14159);
+            $cr->stroke();
+            
+            $cr->set_line_width(4.0);
+            $cr->move_to($handle_x, $handle_y - 20);
+            $cr->line_to($handle_x, $handle_y + 20);
+            $cr->move_to($handle_x - 20, $handle_y);
+            $cr->line_to($handle_x + 20, $handle_y);
+            $cr->stroke();
         }
     }
     elsif ($item->{type} eq 'magnifier') {
@@ -5891,7 +6470,7 @@ sub check_item_selection {
         }
         elsif ($item->{type} eq 'text') {
             $handle = get_text_handle($img_x, $img_y, $item);
-            $item_hit = defined $handle || is_point_in_text($img_x, $img_y, $item);
+            $item_hit = defined $handle;
         }
         elsif ($item->{type} eq 'numbered-circle') {
             $handle = get_circle_handle($img_x, $img_y, $item);
@@ -5970,8 +6549,7 @@ sub is_point_near_item {
         return is_point_near_freehand($x, $y, $item);
     }
     elsif ($item->{type} eq 'text') {
-        return 1 if defined get_text_handle($x, $y, $item);
-        return 0;
+        return is_point_in_text($x, $y, $item);
     }
     elsif ($item->{type} eq 'numbered-circle') {
         return is_point_in_circle($x, $y, $item);
@@ -6632,21 +7210,84 @@ sub get_text_handle {
     my $box_width = $text_item->{width};
     my $box_height = $text_item->{height};
 
-    if (abs($x - $box_x) < $threshold && abs($y - $box_y) < $threshold) { return 'nw'; }
-    if (abs($x - ($box_x + $box_width)) < $threshold && abs($y - $box_y) < $threshold) { return 'ne'; }
-    if (abs($x - ($box_x + $box_width)) < $threshold && abs($y - ($box_y + $box_height)) < $threshold) { return 'se'; }
-    if (abs($x - $box_x) < $threshold && abs($y - ($box_y + $box_height)) < $threshold) { return 'sw'; }
-
-    if (abs($y - $box_y) < $threshold && $x >= $box_x && $x <= $box_x + $box_width) { return 'n'; }
-    if (abs($y - ($box_y + $box_height)) < $threshold && $x >= $box_x && $x <= $box_x + $box_width) { return 's'; }
-    if (abs($x - $box_x) < $threshold && $y >= $box_y && $y <= $box_y + $box_height) { return 'w'; }
-    if (abs($x - ($box_x + $box_width)) < $threshold && $y >= $box_y && $y <= $box_y + $box_height) { return 'e'; }
+    my $handle_size = 100;
+    my $handle_radius = $handle_size / 2;
+    my $handle_gap = 15;
+    my $handle_x = $box_x - $handle_size - $handle_gap;
+    my $handle_y = $box_y + ($box_height / 2);
+    
+    my $dx = $x - $handle_x;
+    my $dy = $y - $handle_y;
+    my $distance = sqrt($dx * $dx + $dy * $dy);
+    
+    if ($distance <= $handle_radius * 1.2) {
+        return 'drag';
+    }
 
     if (is_point_in_text($x, $y, $text_item)) {
         return 'body';
     }
     
     return;
+}
+
+sub set_cursor_position_from_click {
+    my ($text_item, $click_x, $click_y) = @_;
+    return unless $text_item && defined $click_x && defined $click_y;
+
+    my @lines = split("\n", $text_item->{text});
+    
+    my $desc = Pango::FontDescription->from_string($text_item->{font} // 'Sans 12');
+    my $temp_surface = Cairo::ImageSurface->create('argb32', 10, 10);
+    my $temp_cr = Cairo::Context->create($temp_surface);
+    my $temp_layout = Pango::Cairo::create_layout($temp_cr);
+    $temp_layout->set_font_description($desc);
+
+    $temp_layout->set_text($lines[0] || ' ');
+    my (undef, $line_height) = $temp_layout->get_pixel_size();
+    $line_height = 20 if $line_height <= 0;
+
+    my $relative_y = $click_y - $text_item->{y};
+    my $line_index = int($relative_y / $line_height);
+    $line_index = max(0, min($line_index, scalar(@lines) - 1));
+    
+    $text_item->{current_line} = $line_index;
+
+    my $current_line_text = $lines[$line_index] // '';
+    my $relative_x = $click_x - $text_item->{x};
+    
+    my $char_pos = 0;
+    if (length($current_line_text) > 0) {
+
+        for my $i (0 .. length($current_line_text)) {
+            my $substr = substr($current_line_text, 0, $i);
+            $temp_layout->set_text($substr || ' ');
+            my ($width, undef) = $temp_layout->get_pixel_size();
+            
+            if ($width >= $relative_x) {
+
+                if ($i > 0) {
+                    my $prev_substr = substr($current_line_text, 0, $i - 1);
+                    $temp_layout->set_text($prev_substr || ' ');
+                    my ($prev_width, undef) = $temp_layout->get_pixel_size();
+                    
+                    if ($relative_x - $prev_width < $width - $relative_x) {
+                        $char_pos = $i - 1;
+                    } else {
+                        $char_pos = $i;
+                    }
+                } else {
+                    $char_pos = 0;
+                }
+                last;
+            }
+            $char_pos = $i;
+        }
+    }
+    
+    $text_item->{current_column} = max(0, min($char_pos, length($current_line_text)));
+    
+    $temp_surface->finish();
 }
 
 sub get_circle_handle {
@@ -7748,7 +8389,7 @@ sub handle_shape_drag {
 
     if (defined $item->{type} && $item->{type} eq 'text') {
 
-            if ($handle eq 'body') {
+            if ($handle eq 'body' || $handle eq 'drag') {
                 $item->{x} += $dx;
                 $item->{y} += $dy;
             }
@@ -8975,6 +9616,106 @@ sub create_stroke_transparency_slider {
     return $transparency_tool_item;
 }
 
+sub show_shadow_settings_dialog {
+    my ($parent) = @_;
+
+    my $dialog = Gtk3::Dialog->new(
+        "Drop Shadow Settings",
+        $parent,
+        'modal',
+        'gtk-cancel' => 'cancel',
+        'gtk-ok'     => 'ok'
+    );
+    $dialog->set_default_size(350, 350); 
+
+    my $content_area = $dialog->get_content_area();
+    my $grid = Gtk3::Grid->new();
+    $grid->set_row_spacing(10);
+    $grid->set_column_spacing(15);
+    $grid->set_margin_left(15);   
+    $grid->set_margin_right(15);
+    $grid->set_margin_top(15);
+    $grid->set_margin_bottom(15);
+    
+    my $row = 0;
+    sub add_spin_row {
+        my ($grid_ref, $row_ref, $label_text, $min, $max, $step, $default_value_ref, $digits) = @_;
+        $digits //= 1;
+        
+        my $label = Gtk3::Label->new($label_text . ':');
+        $label->set_halign('start');
+        
+        my $adjustment = Gtk3::Adjustment->new($$default_value_ref, $min, $max, $step, 0, 0);
+        my $spin = Gtk3::SpinButton->new($adjustment, $step, $digits);
+        $spin->set_value($$default_value_ref);
+        $spin->set_hexpand(TRUE);
+        
+        $$grid_ref->attach($label, 0, $$row_ref, 1, 1);
+        $$grid_ref->attach($spin, 1, $$row_ref, 1, 1);
+        $$row_ref++;
+        
+        return $spin;
+    }
+
+    my $spin_offset_x = add_spin_row(\$grid, \$row, "Offset X (px)", -30, 30, 0.5, \$shadow_offset_x, 1);
+    my $spin_offset_y = add_spin_row(\$grid, \$row, "Offset Y (px)", -30, 30, 0.5, \$shadow_offset_y, 1);
+    my $spin_blur     = add_spin_row(\$grid, \$row, "Blur Radius (px)", 0, 30, 0.5, \$shadow_blur, 1);
+    
+    my $shadow_color_label = Gtk3::Label->new("Shadow Color:");
+    $shadow_color_label->set_halign('start');
+    
+    my $shadow_color_btn = Gtk3::ColorButton->new_with_rgba($shadow_base_color);
+
+    $grid->attach($shadow_color_label, 0, $row, 1, 1);
+    $grid->attach($shadow_color_btn, 1, $row, 1, 1);
+    $row++; 
+    
+    my $spin_alpha    = add_spin_row(\$grid, \$row, "Opacity", 0.0, 1.0, 0.05, \$shadow_alpha, 2); 
+
+    $content_area->pack_start($grid, TRUE, TRUE, 0);
+    $dialog->show_all();
+
+    my $response = $dialog->run();
+
+    if ($response eq 'ok') {
+        $shadow_offset_x = $spin_offset_x->get_value();
+        $shadow_offset_y = $spin_offset_y->get_value();
+        $shadow_alpha    = $spin_alpha->get_value();
+        $shadow_blur     = $spin_blur->get_value();
+        
+        my $picked_color = $shadow_color_btn->get_rgba();
+        $shadow_base_color = Gtk3::Gdk::RGBA->new(
+            $picked_color->red,
+            $picked_color->green,
+            $picked_color->blue,
+            1.0
+        );
+
+        my @targets = @selected_items ? @selected_items : ($current_item ? ($current_item) : ());
+        foreach my $item (@targets) {
+            next unless $item->{selected} && $item->{drop_shadow};
+            store_state_for_undo('modify', clone_item($item));
+            
+            $item->{shadow_offset_x} = $shadow_offset_x;
+            $item->{shadow_offset_y} = $shadow_offset_y;
+            $item->{shadow_alpha}    = $shadow_alpha;
+            $item->{shadow_blur}     = $shadow_blur;
+            
+            $item->{shadow_color} = Gtk3::Gdk::RGBA->new(
+                $picked_color->red, 
+                $picked_color->green, 
+                $picked_color->blue, 
+                1.0
+            );
+        }
+        
+        $drawing_area->queue_draw() if @targets;
+    }
+    
+    $dialog->destroy();
+    return;
+}
+
 sub rebuild_main_toolbar {
 
     foreach my $child ($main_toolbar->get_children()) {
@@ -9595,7 +10336,6 @@ sub show_item_context_menu {
 
     my $menu = Gtk3::Menu->new();
 
-    # Add Edit Text option for text items
     if ($current_item->{type} eq 'text') {
         my $edit_text_item = Gtk3::MenuItem->new_with_label("Edit Text");
         $edit_text_item->signal_connect('activate' => sub {
@@ -9658,8 +10398,7 @@ sub show_item_context_menu {
     my $item_type = $current_item->{type};
     if ($item_type =~ /^(line|dashed-line|rectangle|tetragon|pyramid)$/) {
         $menu->append(Gtk3::SeparatorMenuItem->new());
-        
-        # Migrate old show_measures flag to new flags
+
         if (defined $current_item->{show_measures} && $current_item->{show_measures}) {
             $current_item->{show_angles} = 1 unless defined $current_item->{show_angles};
             $current_item->{show_edges} = 1 unless defined $current_item->{show_edges};
@@ -9667,27 +10406,23 @@ sub show_item_context_menu {
             delete $current_item->{show_measures};
         }
         
-        # Create Show Measures menu with submenu
         my $measures_menu_item = Gtk3::MenuItem->new_with_label("Show Measures");
         my $measures_submenu = Gtk3::Menu->new();
-        
-        # Angles submenu item
+
         my $angles_item = Gtk3::CheckMenuItem->new_with_label("Angles");
         $angles_item->set_active($current_item->{show_angles} // 0);
         $angles_item->signal_connect('activate' => sub { 
             toggle_measure_type($current_item, 'angles'); 
         });
         $measures_submenu->append($angles_item);
-        
-        # Edges submenu item
+
         my $edges_item = Gtk3::CheckMenuItem->new_with_label("Edges");
         $edges_item->set_active($current_item->{show_edges} // 0);
         $edges_item->signal_connect('activate' => sub { 
             toggle_measure_type($current_item, 'edges'); 
         });
         $measures_submenu->append($edges_item);
-        
-        # Area submenu item
+
         my $area_item = Gtk3::CheckMenuItem->new_with_label("Area");
         $area_item->set_active($current_item->{show_area} // 0);
         $area_item->signal_connect('activate' => sub { 
@@ -9873,13 +10608,19 @@ sub zoom_out {
 sub zoom_original {
     return unless $image_surface;
 
-    $scale_factor = 1.0;
+    my $monitor_scale = 1;
+    if (defined $window && $window->get_window()) {
+        $monitor_scale = $window->get_scale_factor();
+    }
+
+    $scale_factor = 1.0 / $monitor_scale;
 
     my ($win_width, $win_height) = $window->get_size();
 
     update_drawing_area_size();
 
     $window->resize($win_width, $win_height);
+
     my $scrolled_window = $drawing_area->get_parent;
     while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
         $scrolled_window = $scrolled_window->get_parent;
@@ -10038,6 +10779,11 @@ sub update_controls_for_item {
         if ($font_btn_w) {
             $font_btn_w->set_font_name($item->{font});
         }
+    }
+    
+    if ($shadow_check) {
+        my $is_shadowed = defined $item->{drop_shadow} ? $item->{drop_shadow} : $drop_shadow_enabled;
+        $shadow_check->set_active($is_shadowed);
     }
     
     return;
@@ -10260,6 +11006,17 @@ sub select_item {
     } else {
         $dragging = 0;
         $drag_handle = undef;
+    }
+    
+    if ($item->{type} eq 'text') {
+        if ($handle eq 'drag') {
+            $item->{is_editing} = 0;
+            $is_text_editing = 0;
+        } else {
+            $item->{is_editing} = 1;
+            $is_text_editing = 1;
+            start_cursor_blink();
+        }
     }
 
     $drawing_area->grab_focus();
@@ -10770,7 +11527,6 @@ sub find_next_lower_item {
     return $next_lower_item;
 }
 
-# Undo/Redo:
 
 sub store_state_for_undo {
     my ($action_type, $item) = @_;
