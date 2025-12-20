@@ -282,7 +282,7 @@ sudo zypper install perl-Gtk3 perl-Pango perl-Glib-Object-Introspection perl-Cai
 ```bash
 sudo cpan Gtk3 Pango Glib::Object::Introspection Cairo JSON Number::Bytes::Human \
           File::Which File::Copy::Recursive Proc::Simple Sort::Naturally \
-          Image::Magick File::HomeDir
+          File::HomeDir
 ```
 
 ### Quick Install
