@@ -15,7 +15,7 @@
 
 ## Introduction
 
-**Linia** (Linux Image Annotator) is an annotation application designed for marking up screenshots and images on Linux. It provides multiple drawing tools, persistent undo/redo capabilities, and a project file system that preserves your complete editing history across sessions.
+**Linia** (Linux Image Annotator) is an annotation application designed for marking up screenshots and images on Linux. It provides drawing tools, persistent undo/redo capabilities, and a unique project file system that preserves your complete editing history across sessions.
 
 ### Key Features
 - **Comprehensive Drawing Tools**: Lines, arrows, shapes (2D and 3D), text, freehand, highlighting
@@ -86,7 +86,7 @@ Linia's interface consists of four main horizontal toolbars (from top to bottom)
 - **Paste**: Pastes copied annotation(s) (Ctrl+V)
 - **Clear**: Removes all annotations from the image (keeps the base image)
 - **Delete**: Deletes selected annotation(s) (Delete key)
-- **Settings**: Opens application preferences dialog
+- **Settings**: Opens application preferences dialog with handle size and icon themes options
 
 ### View Menu
 - **Drawing Toolbar Left**: Toggles drawing toolbar between top (horizontal) and left (vertical) positions
@@ -211,14 +211,14 @@ The Main Toolbar provides quick access to file operations, clipboard functions, 
 #### Zoom In
 - **Icon**: Magnifying glass with plus
 - **Function**: Increases image magnification
-- **Shortcut**: Ctrl+Plus (or Ctrl+=)
+- **Shortcut**: Ctrl + Plus (+)
 - **Behavior**: Zooms in centered on current view
 - **Limits**: Can zoom up to very large magnifications
 
 #### Zoom Out
 - **Icon**: Magnifying glass with minus
 - **Function**: Decreases image magnification
-- **Shortcut**: Ctrl+Minus
+- **Shortcut**: Ctrl + Minus (-)
 - **Behavior**: Zooms out centered on current view
 - **Limits**: Minimum zoom shows entire image
 
@@ -227,7 +227,7 @@ The Main Toolbar provides quick access to file operations, clipboard functions, 
 - **Function**: Resets zoom to actual pixel size (100%, 1:1)
 - **Shortcut**: Ctrl+1
 - **Use Case**: View image at true resolution for pixel-perfect work
-- **HiDPI**: Properly handles high-DPI displays and fractional scaling
+- **HiDPI**: Should properly handle high-DPI displays and fractional scaling (still work to do!)
 
 #### Best Fit
 - **Icon**: Fit-to-window icon
@@ -238,6 +238,8 @@ The Main Toolbar provides quick access to file operations, clipboard functions, 
 - **Auto-Applied**: Automatically applied when opening new images
 
 ### File Output
+
+#### There is no Save function and that's intentional - we want to preserve original images and prevent accidental saving of original images with annotations
 
 #### Save As
 - **Icon**: Floppy disk or save icon
@@ -299,8 +301,8 @@ The Drawing Toolbar contains all the annotation and drawing tools. It can be pos
 #### Line Tool
 - **Icon**: Diagonal line
 - **Shortcut**: L
-- **Function**: Draws straight lines
-- **Usage**: Click starting point, drag to endpoint, release
+- **Function**: Draws straight and curved lines
+- **Usage**: For straight lines click starting point, drag to endpoint, release. For curved lines click and drag the middle point and afterwards either middle or end points
 - **Constraints**:
   - **Ctrl+Drag**: Horizontal line only
   - **Shift+Drag**: Vertical line only
@@ -310,7 +312,7 @@ The Drawing Toolbar contains all the annotation and drawing tools. It can be pos
 - **Icon**: Line with single arrowhead
 - **Shortcut**: A
 - **Function**: Draws an arrow pointing from start to end
-- **Usage**: Click starting point, drag to endpoint, release
+- **Usage**: For straight arrows click starting point, drag to endpoint, release. For curved arrows click and drag the middle point and afterwards either middle or end points
 - **Constraints**: Same as Line tool (Ctrl for horizontal, Shift for vertical)
 - **Styling**: Arrow size scales with line width
 - **Direction**: Arrowhead appears at the end point
@@ -319,7 +321,10 @@ The Drawing Toolbar contains all the annotation and drawing tools. It can be pos
 - **Icon**: Line with arrowheads on both ends
 - **Shortcut**: Shift+A
 - **Function**: Draws a line with arrows on both ends
-- **Usage**: Click starting point, drag to endpoint, release
+- **Usage**: For straight double arrows click starting point, drag to endpoint, release. For curved double arrows click and drag the middle point and afterwards either middle or end points.
+- **Constraints**:
+  - **Ctrl+Drag**: Horizontal double-arrow only
+  - **Shift+Drag**: Vertical double-arrow only
 - **Use Case**: Show bidirectional relationships or measurements
 - **Styling**: Both arrows scale with line width
 
@@ -600,6 +605,10 @@ The Widget Toolbar contains all the style controls and parameters for drawing to
 - **Global Effect**: Affects entire image, not individual annotations
 - **Saved in Export**: Dimming is applied to exported images as an annotation effect
 - **Smart Dimming**: Areas under filled shapes (rectangles, ellipses, polygons) remain undimmed, so annotations stay visible
+
+### Drop Shadow
+
+- **Add depth**: Customizable drop shadows add depth to text and other annotations
 
 ---
 
