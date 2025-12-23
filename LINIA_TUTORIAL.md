@@ -960,7 +960,7 @@ Think of .linia files as "save files" for your annotation work—you can close t
 
 ## Conclusion
 
-Linia provides a comprehensive, professional-grade annotation solution for Linux users. Its centered interface design, persistent project files, and extensive drawing tools make it ideal for:
+Linia provides a comprehensive annotation solution for Linux users. Its centered interface design, persistent project files, and extensive drawing tools make it ideal for:
 
 - Technical documentation
 - Tutorial creation
