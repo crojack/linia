@@ -24,27 +24,36 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="7.5374995"
-     inkscape:cx="26.268658"
-     inkscape:cy="23.217249"
-     inkscape:window-width="1729"
-     inkscape:window-height="952"
-     inkscape:window-x="191"
-     inkscape:window-y="42"
+     inkscape:zoom="10.659634"
+     inkscape:cx="19.137618"
+     inkscape:cy="14.16559"
+     inkscape:window-width="1849"
+     inkscape:window-height="1195"
+     inkscape:window-x="26"
+     inkscape:window-y="23"
      inkscape:window-maximized="0"
      inkscape:current-layer="g1" />
   <g
      inkscape:groupmode="layer"
      inkscape:label="Image"
      id="g1">
-    <path
-       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.02993;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-       d="M 3.2983782,23.989165 C 12.176428,13.057734 12.176428,12.960995 12.176428,12.960995 l 4.149523,7.739067 5.503219,-4.168528 7.143728,8.313643"
-       id="path2"
-       sodipodi:nodetypes="ccccc" />
-    <path
+    <rect
+       style="fill:none;stroke:#ffffff;stroke-width:1.088;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke fill markers;stroke-dasharray:none"
        id="rect1"
-       style="fill:none;stroke:#ffffff;stroke-width:0.904082;stroke-linecap:square;stroke-linejoin:miter;paint-order:stroke fill markers;stroke-opacity:1"
-       d="M 2.7309787,5.4636968 H 29.069922 V 26.317665 H 2.7309787 Z" />
+       width="28.237368"
+       height="27.721401"
+       x="1.8813162"
+       y="2.1392994" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:1.088;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:stroke fill markers"
+       d="M 2.0638607,22.608656 11.63267,12.6646 l 4.315345,9.193561 5.628711,-4.59678 7.786383,11.820293"
+       id="path1" />
+    <ellipse
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3.72093;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:stroke fill markers"
+       id="path2"
+       cx="21.154573"
+       cy="8.9958858"
+       rx="3.6117563"
+       ry="3.5547988" />
   </g>
 </svg>

@@ -63,12 +63,12 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="19.570312"
-     inkscape:cx="8.7632739"
-     inkscape:cy="19.621558"
-     inkscape:window-width="1920"
-     inkscape:window-height="984"
+     inkscape:cx="8.7888226"
+     inkscape:cy="19.621557"
+     inkscape:window-width="2481"
+     inkscape:window-height="1369"
      inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="g8">
     <inkscape:grid
@@ -87,48 +87,49 @@
      id="g8">
     <g
        id="g1"
-       style="stroke:#ffffff;stroke-opacity:1">
+       style="stroke:#ffffff;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.2374063,0,0,1.2374063,-3.0097412,-3.4326609)">
       <path
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.884101;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.2;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="M 18.814987,16.92703 C 6.7606925,17.356695 4.2250237,25.999444 4.2250237,25.999444 l -0.088833,0.09124"
          id="path8"
          sodipodi:nodetypes="ccc" />
       <g
          id="g2"
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          transform="matrix(-0.02896926,1.9966012e-4,1.9078127e-4,0.03031747,22.006662,4.2049566)">
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M 101.93272,65.052696 C -147.63296,317.36735 -147.63296,317.50839 -147.63296,317.50839"
            id="path1" />
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M -147.63296,317.50839 C 101.93272,65.193731 101.93272,65.052691 101.93272,65.052691"
            id="path2" />
       </g>
       <g
          id="g4"
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill;stroke-linejoin:round"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          transform="matrix(1.9446549e-4,0.03066872,0.02952871,-2.0197322e-4,16.974511,18.359754)">
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M 101.93272,65.052696 C -147.63296,317.36735 -147.63296,317.50839 -147.63296,317.50839"
            id="path3" />
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:29.378;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M -147.63296,317.50839 C 101.93272,65.193731 101.93272,65.052691 101.93272,65.052691"
            id="path4" />
       </g>
       <path
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.884;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 18.880431,6.0192048 c -0.0015,3.6104399 -0.0015,3.6104399 -0.0015,3.6104399"
          id="path5" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.884101;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          d="m 18.893109,16.937501 c 0.0097,4.36932 0.0097,4.36932 0.0097,4.36932"
          id="path6" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.884101;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          d="M 18.856862,9.6196806 C 2.9421492,9.6741059 4.1024179,25.807989 4.1024179,25.807989 l -0.025652,0.143057"
          id="path7"
          sodipodi:nodetypes="ccc" />
