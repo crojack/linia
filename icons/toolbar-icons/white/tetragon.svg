@@ -27,12 +27,12 @@
      inkscape:document-units="px"
      showgrid="false"
      inkscape:zoom="12.749609"
-     inkscape:cx="24.588989"
+     inkscape:cx="24.510556"
      inkscape:cy="16.706395"
-     inkscape:window-width="1920"
-     inkscape:window-height="984"
-     inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-width="1770"
+     inkscape:window-height="1195"
+     inkscape:window-x="26"
+     inkscape:window-y="23"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"><inkscape:grid
        type="xygrid"
@@ -606,6 +606,6 @@
      inkscape:groupmode="layer"
      id="layer1"><path
        id="rect8"
-       style="fill:none;stroke:#ffffff;stroke-width:0.48641;stroke-linecap:square;paint-order:markers stroke fill;stroke-opacity:1"
-       d="m 3.0078263,1.4306538 h 2.5550346 l 1.992218,5.6793741 -6.58097518,0.020752 z"
+       style="fill:none;stroke:#ffffff;stroke-width:0.35930418;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       d="M 2.7882586,0.93903155 H 5.7087487 L 7.9859205,7.430746 0.46364568,7.4544662 Z"
        sodipodi:nodetypes="ccccc" /></g></svg>

@@ -30,9 +30,9 @@
      inkscape:cx="18.235853"
      inkscape:cy="16.706395"
      inkscape:window-width="1920"
-     inkscape:window-height="984"
-     inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-height="1195"
+     inkscape:window-x="26"
+     inkscape:window-y="23"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"><inkscape:grid
        type="xygrid"
@@ -606,7 +606,7 @@
      inkscape:groupmode="layer"
      id="layer1"><path
        sodipodi:type="star"
-       style="fill:none;stroke:#ffffff;stroke-width:0.529167;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       style="fill:none;stroke:#ffffff;stroke-width:0.38911944;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
        id="path6"
        inkscape:flatsided="false"
        sodipodi:sides="3"
@@ -619,6 +619,6 @@
        inkscape:rounded="0"
        inkscape:randomized="0"
        d="M 9.1517518,3.3203634 5.6152638,3.4429353 2.0771698,3.5034481 3.7392634,0.37947373 5.4559048,-2.7148619 7.3302992,0.28654059 Z"
-       inkscape:transform-center-x="-0.0082101447"
-       inkscape:transform-center-y="-1.0059416"
-       transform="matrix(0.88764716,0.01940234,-0.01940234,0.88764716,-0.6770208,3.9326105)" /></g></svg>
+       inkscape:transform-center-x="-0.0091239168"
+       inkscape:transform-center-y="-1.2509281"
+       transform="matrix(0.98643514,0.02412757,-0.02156166,1.1038242,-1.3176798,3.5425582)" /></g></svg>
