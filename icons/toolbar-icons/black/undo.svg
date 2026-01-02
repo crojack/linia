@@ -51,100 +51,24 @@
          result="composite2"
          id="feComposite3793" />
     </filter>
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter10"
-       x="-0.040641155"
-       y="-0.040277959"
-       width="1.0895194"
-       height="1.0969703">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="1.000000"
-         flood-color="rgb(170,170,170)"
-         id="feFlood9" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="0.200000"
-         id="feGaussianBlur9" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="0.200000"
-         dy="0.400000"
-         id="feOffset9" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite9" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite10" />
-    </filter>
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter12"
-       x="-0.040641155"
-       y="-0.040277959"
-       width="1.0895194"
-       height="1.0969703">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="1.000000"
-         flood-color="rgb(170,170,170)"
-         id="feFlood10" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="0.200000"
-         id="feGaussianBlur10" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="0.200000"
-         dy="0.400000"
-         id="feOffset10" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite11" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite12" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="namedview4"
-     pagecolor="#ffffff"
+     pagecolor="#696969"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
      inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="false"
+     inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="19.570312"
-     inkscape:cx="12.391218"
-     inkscape:cy="15.942515"
-     inkscape:window-width="1920"
-     inkscape:window-height="984"
+     inkscape:cx="8.7888226"
+     inkscape:cy="19.57046"
+     inkscape:window-width="2481"
+     inkscape:window-height="1369"
      inkscape:window-x="0"
-     inkscape:window-y="26"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="g8">
     <inkscape:grid
@@ -163,43 +87,51 @@
      id="g8">
     <g
        id="g1"
-       transform="matrix(-1,0,0,1,30.985807,0)">
+       style="stroke:#000000;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(-1.2374063,0,0,1.2374063,34.382573,-3.4326609)">
       <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.914131;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="M 27.460577,13.585525 C 18.833641,4.5852227 18.182167,3.9147813 18.182167,3.9147813"
-         id="path1038"
-         sodipodi:nodetypes="cc" />
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         d="M 18.814987,16.92703 C 6.7606925,17.356695 4.2250237,25.999444 4.2250237,25.999444 l -0.088833,0.09124"
+         id="path8"
+         sodipodi:nodetypes="ccc" />
       <g
-         id="g1048"
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:26.7153;stroke-dasharray:none;stroke-opacity:1"
-         transform="matrix(2.4650641e-4,0.03743089,0.03743089,-2.4650641e-4,15.716042,19.211653)">
+         id="g2"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         transform="matrix(-0.02896926,1.9966012e-4,1.9078127e-4,0.03031747,22.006662,4.2049566)">
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:26.7153;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M 101.93272,65.052696 C -147.63296,317.36735 -147.63296,317.50839 -147.63296,317.50839"
-           id="path1044" />
+           id="path1" />
         <path
-           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:26.7153;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:40.4908;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="M -147.63296,317.50839 C 101.93272,65.193731 101.93272,65.052691 101.93272,65.052691"
-           id="path1046" />
+           id="path2" />
+      </g>
+      <g
+         id="g4"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         transform="matrix(1.9446549e-4,0.03066872,0.02952871,-2.0197322e-4,16.974511,18.359754)">
+        <path
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           d="M 101.93272,65.052696 C -147.63296,317.36735 -147.63296,317.50839 -147.63296,317.50839"
+           id="path3" />
+        <path
+           style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:39.8751;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           d="M -147.63296,317.50839 C 101.93272,65.193731 101.93272,65.052691 101.93272,65.052691"
+           id="path4" />
       </g>
       <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.999999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="m 18.001153,3.8599453 0.142626,4.9123502"
-         id="path1113"
-         sodipodi:nodetypes="cc" />
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         d="m 18.880431,6.0192048 c -0.0015,3.6104399 -0.0015,3.6104399 -0.0015,3.6104399"
+         id="path5" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.999999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="m 18.096979,17.629101 c 0.01224,5.332714 0.01224,5.332714 0.01224,5.332714"
-         id="path1115" />
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         d="m 18.893109,16.937501 c 0.0097,4.36932 0.0097,4.36932 0.0097,4.36932"
+         id="path6" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.999999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="M 18.051031,8.6977701 C -0.001534,10.182745 3.745025,28.190858 3.745025,28.190858 l -0.03252,-0.08999"
-         id="path1117"
-         sodipodi:nodetypes="ccc" />
-      <path
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.999999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="M 17.99795,17.61632 C 6.290267,19.064211 3.900442,28.159937 3.900442,28.159937 l -0.112605,-0.06503"
-         id="path1215"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         d="M 18.856862,9.6196806 C 2.9421492,9.6741059 4.1024179,25.807989 4.1024179,25.807989 l -0.025652,0.143057"
+         id="path7"
          sodipodi:nodetypes="ccc" />
     </g>
   </g>
