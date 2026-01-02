@@ -64,6 +64,7 @@ my %items = (
     'pyramids' => [],
     'cuboids' => [],
     'numbered-circles' => [],
+    'notes' => [],
     'freehand-items' => [],
     'highlighter-lines' => [],
     'text_items' => [],
@@ -148,10 +149,12 @@ my $current_image = undef;
 my $image_surface = undef;
 my $preview_surface = undef;
 my $preview_ratio = 1.0;
-my $scale_factor = 1.0;
-my $loaded_image_name;
-my $initial_scale_factor = 1.0;
+my $zoom = 1.0;
+my $monitor_scale = 1.0;
+my $render_ratio = 1.0;
+
 my ($original_width, $original_height);
+my $map_initialized = 0;
 
 # --- Coordinates ---
 
@@ -236,7 +239,7 @@ my $stroke_color = Gtk3::Gdk::RGBA->new(255, 0, 0, 1);
 my %toggle_tools = map { $_ => 1 } qw(
     select crop line single-arrow double-arrow
     rectangle ellipse triangle tetragon
-    pentagon pyramid cuboid freehand highlighter text number magnifier pixelize
+    pentagon pyramid cuboid freehand highlighter text number note magnifier pixelize
 );
 
 if (@ARGV) {
@@ -259,6 +262,7 @@ sub initialize_tool_state {
         'pyramids' => [],
         'cuboids' => [],
         'numbered-circles' => [],
+        'notes' => [],
         'freehand-items' => [],
         'highlighter-lines' => [],
         'text_items' => [],
@@ -671,6 +675,8 @@ my @drawing_toolbar_items = (
     { type => "separator" },
     { name => "text", label => "Text", tooltip => "Add text", group => "tools" },
     { type => "separator" },
+    { name => "note", label => "Note", tooltip => "Add note", group => "tools" },
+    { type => "separator" },
     { name => "number", label => "Number", tooltip => "Add numbered circle", group => "tools" },
     { type => "separator" },
     { name => "magnifier", label => "Magnifier", tooltip => "Add magnifier", group => "tools" },
@@ -791,6 +797,10 @@ $font_btn_w->signal_connect('font-set' => sub {
             store_state_for_undo('modify', clone_item($item));
             $item->{font} = $font_btn_w->get_font_name();
         }
+        elsif ($item->{type} eq 'note') {
+            store_state_for_undo('modify', clone_item($item));
+            $item->{font} = $font_btn_w->get_font_name();
+        }
     }
     $drawing_area->queue_draw() if @targets;
 });
@@ -834,7 +844,7 @@ $shadow_check->signal_connect('toggled' => sub {
     $drawing_area->queue_draw() if @targets;
 });
 
-my $shadow_settings_btn = Gtk3::Button->new_from_icon_name('preferences-system-symbolic', 'menu');
+my $shadow_settings_btn = Gtk3::Button->new_from_icon_name('preferences-system-symbolic', 1);
 $shadow_settings_btn->set_relief('none');
 $shadow_settings_btn->set_tooltip_text('Configure drop shadow properties.');
 
@@ -888,10 +898,10 @@ sub handle_tool_selection {
             }
         }
 
-        if ($current_tool eq 'text') {
+        if ($current_tool eq 'text' || $current_tool eq 'note') {
             stop_cursor_blink();
             $is_text_editing = 0;
-            if ($current_item && $current_item->{type} eq 'text') {
+            if ($current_item && ($current_item->{type} eq 'text' || $current_item->{type} eq 'note')) {
                 cleanup_text_editing($current_item);
             }
         }
@@ -913,7 +923,8 @@ sub handle_tool_selection {
                 next unless exists $items{$type} && defined $items{$type};
                 foreach my $item (@{$items{$type}}) {
                     $item->{selected} = 0;
-                    $item->{is_editing} = 0 if $type eq 'text_items';
+
+                    $item->{is_editing} = 0 if ($type eq 'text_items' || $type eq 'notes');
                 }
             }
             $current_item = undef;
@@ -924,7 +935,6 @@ sub handle_tool_selection {
         $current_mode = $tool_name;
 
         if ($current_tool eq 'highlighter') {
-
             $last_tool_fill_color = $fill_color;
             $last_tool_stroke_color = $stroke_color;
             $last_tool_line_width = $line_width;
@@ -938,7 +948,6 @@ sub handle_tool_selection {
             $fill_color_button->set_sensitive(FALSE);
         }
         elsif ($last_tool eq 'highlighter') {
-     
             $fill_color = $last_tool_fill_color // Gtk3::Gdk::RGBA->new(0.21, 0.52, 0.89, 0.25);
             $stroke_color = $last_tool_stroke_color // Gtk3::Gdk::RGBA->new(255, 0, 0, 1);
             $line_width = $last_tool_line_width // 3.0;
@@ -948,13 +957,12 @@ sub handle_tool_selection {
             $line_width_spin_button->set_value($line_width);
             $fill_color_button->set_sensitive(TRUE);
         }
-
         elsif ($current_tool eq 'crop') {
             if (exists $items{rectangles}) {
                 @{$items{rectangles}} = grep { $_->{type} ne 'crop_rect' } @{$items{rectangles}};
             }
 
-            my $margin = 20 / $scale_factor;
+            my $margin = 20 / ($zoom * $monitor_scale);
             
             my $crop_item = {
                 type => 'crop_rect',
@@ -1050,29 +1058,41 @@ $window->signal_connect('delete-event' => sub {
     save_tool_state();
     return FALSE; 
 });
+
 $window->signal_connect('destroy' => sub { Gtk3::main_quit(); });
+
 $window->signal_connect('configure-event' => \&update_drawing_area_size);
+
 $window->signal_connect('map-event' => sub {
+
+    return 0 if $map_initialized;
+    $map_initialized = 1;
+
+    $monitor_scale = $drawing_area->get_scale_factor || 1.0;
+
     if ($initial_file && -f $initial_file) {
-    
+
         if ($initial_file =~ /\.linia$/i) {
 
             local $/; 
             if (open(my $fh, '<', $initial_file)) {
                 my $json_text = <$fh>;
                 close $fh;
-                
+
                 my $data = eval { from_json($json_text) };
-                
+
                 if ($data) {
-              
+
                     if ($data->{image_path} && -f $data->{image_path}) {
                         load_image_file($data->{image_path}, $window);
                         zoom_fit_best(); 
                     } else {
-                        my $msg = Gtk3::MessageDialog->new($window, 'modal', 'warning', 'ok', 
-                            "Original image not found at:\n" . ($data->{image_path} || "unknown") . 
-                            "\n\nThe annotations will load, but the background image is missing.");
+                        my $msg = Gtk3::MessageDialog->new(
+                            $window, 'modal', 'warning', 'ok', 
+                            "Original image not found at:\n" .
+                            ($data->{image_path} || "unknown") .
+                            "\n\nThe annotations will load, but the background image is missing."
+                        );
                         $msg->run();
                         $msg->destroy();
                     }
@@ -1081,7 +1101,7 @@ $window->signal_connect('map-event' => sub {
 
                     $global_timestamp = $data->{global_timestamp} || 0;
                     $dimming_level = $data->{dimming_level} || 0;
-                    
+
                     if ($dimming_scale) {
                         $dimming_scale->set_value($dimming_level);
                     }
@@ -1092,13 +1112,14 @@ $window->signal_connect('map-event' => sub {
                 }
             }
         } else {
-       
             load_image_file($initial_file, $window);
             zoom_fit_best();
         }
     }
-    return FALSE;
+
+    return 0;
 });
+
 
 my $stored_event;
 $drawing_area->signal_connect('draw' => sub {
@@ -1110,47 +1131,88 @@ $drawing_area->signal_connect('scroll-event' => sub {
     my ($widget, $event) = @_;
     return FALSE unless $image_surface;
     $is_zooming_active = 1;
-    if ($zoom_end_timeout) { Glib::Source->remove($zoom_end_timeout); }
+
+    if ($zoom_end_timeout) {
+        Glib::Source->remove($zoom_end_timeout);
+    }
+
     $zoom_end_timeout = Glib::Timeout->add(150, sub {
-        $is_zooming_active = 0; $zoom_end_timeout = undef; $widget->queue_draw(); return FALSE; 
+        $is_zooming_active = 0;
+        $zoom_end_timeout = undef;
+        return FALSE;
     });
-    my ($mouse_x, $mouse_y) = ($event->x, $event->y);
-    my $old_scale = $scale_factor;
+
+    my $old_zoom = $zoom;
+
     if ($event->direction eq 'smooth') {
         my (undef, $dy) = $event->get_scroll_deltas();
-        $scale_factor *= (1.0 - ($dy * 0.05)) if defined $dy;
-    } elsif ($event->direction eq 'up') {
-        $scale_factor *= 1.1;
-    } elsif ($event->direction eq 'down') {
-        $scale_factor *= 0.9;
+        $zoom *= (1.0 - ($dy * 0.05)) if defined $dy;
     }
-    $scale_factor = max(0.01, min(50.0, $scale_factor));
-    if (abs($old_scale - $scale_factor) > 0.0001) {
-        update_drawing_area_size();
-        my $scrolled_window = $widget->get_parent;
-        while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) { $scrolled_window = $scrolled_window->get_parent; }
-        return FALSE unless $scrolled_window;
-        my $hadj = $scrolled_window->get_hadjustment;
-        my $vadj = $scrolled_window->get_vadjustment;
-        if ($hadj && $vadj) {
-            my $image_width = $image_surface->get_width * $scale_factor;
-            my $view_width = $scrolled_window->get_child->get_allocated_width;
-            my $h_value = (($mouse_x / $old_scale) * $scale_factor) - $mouse_x;
-            $hadj->set_value(max(0, min($h_value, $image_width - $view_width)));
+    elsif ($event->direction eq 'up') {
+        $zoom *= 1.1;
+    }
+    elsif ($event->direction eq 'down') {
+        $zoom *= 0.9;
+    }
 
+    $zoom = max(0.01, min(50.0, $zoom));
+
+    if (abs($old_zoom - $zoom) > 0.0001) {
+        my $scrolled_window = $widget->get_parent;
+        while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
+            $scrolled_window = $scrolled_window->get_parent;
         }
+
+        if ($scrolled_window) {
+            my $hadj = $scrolled_window->get_hadjustment;
+            my $vadj = $scrolled_window->get_vadjustment;
+
+            if ($hadj && $vadj) {
+                my $ratio = $zoom / $old_zoom;
+
+                my $viewport = $scrolled_window->get_child;
+                if ($viewport) {
+                    my $mid_x = $viewport->get_allocated_width / 2;
+                    my $mid_y = $viewport->get_allocated_height / 2;
+
+                    my $new_h = ($hadj->get_value() + $mid_x) * $ratio - $mid_x;
+                    my $new_v = ($vadj->get_value() + $mid_y) * $ratio - $mid_y;
+
+                    update_drawing_area_size();
+
+                    $hadj->set_value($new_h);
+                    $vadj->set_value($new_v);
+                } else {
+                    update_drawing_area_size();
+                }
+            } else {
+                update_drawing_area_size();
+            }
+        } else {
+            update_drawing_area_size();
+        }
+
         $widget->queue_draw();
     }
+
     return TRUE;
 });
+
 
 $drawing_area->signal_connect('key-press-event' => sub {
     my ($widget, $event) = @_;
     my $keyval = $event->keyval;
 
     if ($keyval == Gtk3::Gdk::KEY_Delete) {
-        if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
-            cleanup_text_editing($current_item);
+        if ($current_item && ($current_item->{type} eq 'text' || $current_item->{type} eq 'note') && $current_item->{is_editing}) {
+            if ($current_item->{type} eq 'text') {
+                cleanup_text_editing($current_item);
+            } elsif ($current_item->{type} eq 'note') {
+                $current_item->{is_editing} = 0;
+                $current_item->{is_open} = 0;
+                $is_text_editing = 0;
+                stop_cursor_blink();
+            }
             delete_item();
             return TRUE;
         }
@@ -1160,13 +1222,24 @@ $drawing_area->signal_connect('key-press-event' => sub {
         }
     }
 
-    if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
+    if ($current_item && ($current_item->{type} eq 'text' || $current_item->{type} eq 'note') && $current_item->{is_editing}) {
         if ($keyval == Gtk3::Gdk::KEY_Escape) {
-            cleanup_text_editing($current_item);
+            if ($current_item->{type} eq 'text') {
+                cleanup_text_editing($current_item);
+            } elsif ($current_item->{type} eq 'note') {
+                $current_item->{is_editing} = 0;
+                $current_item->{is_open} = 0;
+                $is_text_editing = 0;
+                stop_cursor_blink();
+                $widget->queue_draw();
+            }
             return TRUE;
         }
         elsif ($keyval == Gtk3::Gdk::KEY_Left) {
-            my @lines = split("\n", $current_item->{text});
+            delete $current_item->{selection_start};
+            delete $current_item->{selection_end};
+            
+            my @lines = split("\n", $current_item->{text}, -1);
             my $curr_line = $lines[$current_item->{current_line}] // '';
             
             if ($current_item->{current_column} > 0) {
@@ -1180,7 +1253,10 @@ $drawing_area->signal_connect('key-press-event' => sub {
             return TRUE;
         }
         elsif ($keyval == Gtk3::Gdk::KEY_Right) {
-            my @lines = split("\n", $current_item->{text});
+            delete $current_item->{selection_start};
+            delete $current_item->{selection_end};
+            
+            my @lines = split("\n", $current_item->{text}, -1);
             my $curr_line = $lines[$current_item->{current_line}] // '';
             my $line_length = length($curr_line);
             
@@ -1194,7 +1270,11 @@ $drawing_area->signal_connect('key-press-event' => sub {
             return TRUE;
         }
         elsif ($keyval == Gtk3::Gdk::KEY_Return || $keyval == Gtk3::Gdk::KEY_KP_Enter) {
-            my @lines = split("\n", $current_item->{text});
+            if ($current_item->{selection_start} && $current_item->{selection_end}) {
+                delete_note_selection($current_item);
+            }
+            
+            my @lines = split("\n", $current_item->{text}, -1);
             my $curr_line = $lines[$current_item->{current_line}] // '';
             my $before = substr($curr_line, 0, $current_item->{current_column});
             my $after = substr($curr_line, $current_item->{current_column});
@@ -1207,14 +1287,20 @@ $drawing_area->signal_connect('key-press-event' => sub {
             return TRUE;
         }
         elsif ($keyval == Gtk3::Gdk::KEY_BackSpace) {
+            if ($current_item->{selection_start} && $current_item->{selection_end}) {
+                delete_note_selection($current_item);
+                $widget->queue_draw();
+                return TRUE;
+            }
+            
             if ($current_item->{current_column} > 0) {
-                my @lines = split("\n", $current_item->{text});
+                my @lines = split("\n", $current_item->{text}, -1);
                 substr($lines[$current_item->{current_line}], $current_item->{current_column} - 1, 1) = '';
                 $current_item->{text} = join("\n", @lines);
                 $current_item->{current_column}--;
             }
             elsif ($current_item->{current_line} > 0) {
-                my @lines = split("\n", $current_item->{text});
+                my @lines = split("\n", $current_item->{text}, -1);
                 my $prev = $lines[$current_item->{current_line} - 1];
                 $current_item->{current_column} = length($prev);
                 $lines[$current_item->{current_line} - 1] .= $lines[$current_item->{current_line}];
@@ -1228,11 +1314,25 @@ $drawing_area->signal_connect('key-press-event' => sub {
         else {
             my $char = Gtk3::Gdk::keyval_to_unicode($keyval);
             if ($char && $char >= 0x20) {
-                my @lines = split("\n", $current_item->{text});
+                if ($current_item->{selection_start} && $current_item->{selection_end}) {
+                    delete_note_selection($current_item);
+                }
+                
+                my @lines = split("\n", $current_item->{text}, -1);
                 $lines[$current_item->{current_line}] //= '';
                 substr($lines[$current_item->{current_line}], $current_item->{current_column}, 0) = chr($char);
                 $current_item->{text} = join("\n", @lines);
                 $current_item->{current_column}++;
+                
+                my @updated_lines = split("\n", $current_item->{text}, -1);
+                if ($current_item->{current_line} >= scalar(@updated_lines)) {
+                    $current_item->{current_line} = scalar(@updated_lines) - 1;
+                }
+                my $line_length = length($updated_lines[$current_item->{current_line}] // '');
+                if ($current_item->{current_column} > $line_length) {
+                    $current_item->{current_column} = $line_length;
+                }
+                
                 $widget->queue_draw();
                 return TRUE;
             }
@@ -1380,22 +1480,18 @@ $drawing_area->signal_connect('button-press-event' => sub {
     $widget->grab_focus();
 
     if ($event->button == 3) {  
-
         unless ($current_item) { check_item_selection($widget, $event->x, $event->y); }
-        
         if ($current_item) { 
-       
             show_item_context_menu($event); 
         } else {
-     
             show_background_context_menu($event);
         }
         return TRUE;
     }
+
     if ($event->button == 2) { start_panning($event->x_root, $event->y_root); return TRUE; }
 
     if ($event->button == 1) {
- 
         if ($current_item && $current_item->{type} eq 'text' && $current_item->{is_editing}) {
             if (is_point_in_text($x, $y, $current_item)) {
                 set_cursor_position_from_click($current_item, $x, $y);
@@ -1405,6 +1501,7 @@ $drawing_area->signal_connect('button-press-event' => sub {
         }
         
         if ($current_item && $current_item->{selected}) {
+            my $handle = undef;
 
             if ($current_item->{type} eq 'text') {
                 my $text_handle = get_text_handle($x, $y, $current_item);
@@ -1422,10 +1519,7 @@ $drawing_area->signal_connect('button-press-event' => sub {
                     $widget->queue_draw();
                     return TRUE;
                 }
-            }
-            
-            my $handle = undef;
-            if ($current_item->{type} eq 'crop_rect' || $current_item->{type} eq 'rectangle' || $current_item->{type} eq 'pixelize') {
+            } elsif ($current_item->{type} eq 'crop_rect' || $current_item->{type} eq 'rectangle' || $current_item->{type} eq 'pixelize') {
                 $handle = get_rectangle_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'ellipse') {
                 $handle = get_ellipse_handle($x, $y, $current_item);
@@ -1437,16 +1531,42 @@ $drawing_area->signal_connect('button-press-event' => sub {
                 $handle = get_pyramid_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'cuboid') {
                 $handle = get_cuboid_handle($x, $y, $current_item);
-            } elsif ($current_item->{type} eq 'text') {
-                if (is_point_in_text($x, $y, $current_item)) {
-                    $handle = 'body';
-                }
-            } elsif ($current_item->{type} eq 'magnifier') {
+            } elsif ($current_item->{type} eq 'magnifier' || $current_item->{type} eq 'numbered-circle') {
                 $handle = get_circle_handle($x, $y, $current_item);
             } elsif ($current_item->{type} eq 'svg') {
                 $handle = get_svg_handle($x, $y, $current_item);
-            } elsif ($current_item->{type} eq 'numbered-circle') {
-                $handle = get_circle_handle($x, $y, $current_item);
+            } elsif ($current_item->{type} eq 'note') {
+                $handle = get_note_handle($x, $y, $current_item);
+                
+                if (defined $handle && $handle eq 'callout' && $current_item->{is_editing}) {
+                    my $event_type = $event->type;
+                    
+                    if ($event_type eq '2button-press') {
+                        select_word_at_position($current_item, $x, $y);
+                        $widget->queue_draw();
+                    }
+                    elsif ($event_type eq '3button-press') {
+                        select_all_note_text($current_item);
+                        $widget->queue_draw();
+                    }
+                    else {
+                        set_note_cursor_position_from_click($current_item, $x, $y);
+                        delete $current_item->{selection_start};
+                        delete $current_item->{selection_end};
+                        $widget->queue_draw();
+                    }
+                    return TRUE;
+                }
+                
+                if (!$handle && $current_item->{is_editing}) {
+                    $current_item->{is_editing} = 0;
+                    $current_item->{is_open} = 0;
+                    $is_text_editing = 0;
+                    stop_cursor_blink();
+                    deselect_all_items();
+                    $widget->queue_draw();
+                    return TRUE;
+                }
             } elsif ($current_item->{type} eq 'freehand' || $current_item->{type} eq 'highlighter') {
                 $handle = get_freehand_handle($x, $y, $current_item);
             }
@@ -1456,12 +1576,35 @@ $drawing_area->signal_connect('button-press-event' => sub {
                 $drag_handle = $handle;
                 return TRUE;
             }
-        }
+        } 
 
         if ($current_tool eq 'crop') { return TRUE; }
 
         my $item_was_selected = check_item_selection($widget, $event->x, $event->y);
-        if ($item_was_selected) { return TRUE; }
+        if ($item_was_selected) {
+            if ($current_item && $current_item->{type} eq 'note' && $current_item->{is_editing}) {
+                my $handle = get_note_handle($x, $y, $current_item);
+                if (defined $handle && $handle eq 'callout') {
+                    my $event_type = $event->type;
+                    
+                    if ($event_type eq '2button-press') {
+                        select_word_at_position($current_item, $x, $y);
+                        $widget->queue_draw();
+                    }
+                    elsif ($event_type eq '3button-press') {
+                        select_all_note_text($current_item);
+                        $widget->queue_draw();
+                    }
+                    else {
+                        set_note_cursor_position_from_click($current_item, $x, $y);
+                        delete $current_item->{selection_start};
+                        delete $current_item->{selection_end};
+                        $widget->queue_draw();
+                    }
+                }
+            }
+            return TRUE;
+        }
 
         if ($current_item && $current_item->{selected}) {
             deselect_all_items();
@@ -1474,6 +1617,9 @@ $drawing_area->signal_connect('button-press-event' => sub {
                 my $text_item = create_text_item($x, $y);
                 store_state_for_undo('create', $text_item);
                 $is_text_editing = 1;
+                $is_drawing = 0;
+                $end_x = undef;
+                $end_y = undef;
                 start_cursor_blink();
                 $widget->grab_focus();
                 $widget->queue_draw();
@@ -1492,11 +1638,28 @@ $drawing_area->signal_connect('button-press-event' => sub {
             } elsif ($current_tool eq 'number') {
                 my $circle = create_numbered_circle($x, $y);
                 store_state_for_undo('create', $circle);
+                $is_drawing = 0;
+                $end_x = undef;
+                $end_y = undef;
+                $widget->queue_draw();
+                return TRUE;
+            } elsif ($current_tool eq 'note') {
+                my $note = create_note($x, $y);
+                store_state_for_undo('create', $note);
+                $is_text_editing = 1;
+                $is_drawing = 0;
+                $end_x = undef;
+                $end_y = undef;
+                start_cursor_blink();
+                $widget->grab_focus();
                 $widget->queue_draw();
                 return TRUE;
             } elsif ($current_tool eq 'magnifier') {
                 my $magnifier = create_magnifier($x, $y);
                 store_state_for_undo('create', $magnifier);
+                $is_drawing = 0;
+                $end_x = undef;
+                $end_y = undef;
                 $widget->queue_draw();
                 return TRUE;
             } elsif ($current_tool eq 'pixelize') {
@@ -1591,6 +1754,13 @@ $drawing_area->signal_connect('motion-notify-event' => sub {
             }
         }
         
+        if ($current_item && $current_item->{type} eq 'note' && $current_item->{selected}) {
+            my $note_handle = get_note_handle($curr_x, $curr_y, $current_item);
+            if (defined $note_handle && $note_handle eq 'icon') {
+                $should_show_hand = 1;
+            }
+        }
+        
         if ($should_show_hand) {
             my $cursor = Gtk3::Gdk::Cursor->new_for_display(
                 $window->get_display(),
@@ -1643,6 +1813,14 @@ $drawing_area->signal_connect('button-release-event' => sub {
     }
 
     if ($is_drawing && $current_tool ne 'select') {
+        if ($current_tool eq 'note') {
+            $is_drawing = 0;
+            $end_x = undef;
+            $end_y = undef;
+            $widget->queue_draw();
+            return TRUE;
+        }
+        
         my ($new_end_x, $new_end_y) = ($end_x, $end_y);
 
         if ($event->state & 'control-mask') {
@@ -1872,7 +2050,7 @@ sub load_image_file {
                $preview_ratio = 1.0;
            }
 
-           $initial_scale_factor = 1;
+           $zoom = 1.0;
 
            %items = (
                'lines' => [],
@@ -1887,6 +2065,7 @@ sub load_image_file {
                'freehand_items' => [],
                'highlighter-lines' => [],
                'text_items' => [],
+               'notes' => [],
                'magnifiers' => [],
                'pixelized_items' => [],
                'numbered-circles' => [],
@@ -1936,8 +2115,6 @@ sub close_image {
             $drawing_area->set_size_request(1, 1);
         }
 
-        $scale_factor = 1.0;
-
         %items = (
             'lines' => [],
             'arrows' => [],
@@ -1949,6 +2126,7 @@ sub close_image {
             'freehand-items' => [],
             'highlighter-lines' => [],
             'numbered-circles' => [],
+            'notes' => [],
             'text_items' => [],
             'magnifiers' => [],
             'pixelize_items' => [],
@@ -1970,6 +2148,26 @@ sub close_image {
 sub save_image_as {
     my ($window) = @_;
     return unless $image_surface;
+
+    my $has_notes = 0;
+    if (exists $items{notes} && defined $items{notes} && ref($items{notes}) eq 'ARRAY') {
+        $has_notes = scalar(grep { defined $_ } @{$items{notes}}) > 0;
+    }
+    
+    if ($has_notes) {
+        my $dialog = Gtk3::MessageDialog->new(
+            $window,
+            'modal',
+            'warning',
+            'ok-cancel',
+            "Notes Cannot Be Exported\n\nThis image contains notes that will NOT be included in PNG/JPEG exports.\n\nTo preserve your notes and their functionality, save as a .linia project file instead (File → Save Project As).\n\nDo you want to continue exporting without notes?"
+        );
+        
+        my $response = $dialog->run();
+        $dialog->destroy();
+        
+        return if $response eq 'cancel';
+    }
 
     use File::Basename;
     use POSIX qw(strftime);
@@ -2147,6 +2345,23 @@ sub save_image_as {
 
     $dialog->destroy();
     return TRUE;
+}
+
+sub export_image_full_res {
+    my ($filename) = @_;
+
+    my $w = $image_surface->get_width;
+    my $h = $image_surface->get_height;
+
+    my $surface = Cairo::ImageSurface->create('argb32', $w, $h);
+    my $cr = Cairo::Context->create($surface);
+
+    $cr->set_source_surface($image_surface, 0, 0);
+    $cr->paint;
+
+    draw_annotations_image_space($cr);
+
+    $surface->write_to_png($filename);
 }
 
 sub save_project_as {
@@ -2354,6 +2569,13 @@ sub prepare_items_for_save {
 
             delete $copy->{pixelated_surface}; 
             delete $copy->{pixbuf}; 
+            
+            if ($copy->{type} eq 'note') {
+                delete $copy->{selection_start};
+                delete $copy->{selection_end};
+                delete $copy->{is_editing};
+                delete $copy->{is_open};
+            }
             
             push @{$clean_items->{$type}}, $copy;
         }
@@ -3456,6 +3678,40 @@ sub create_numbered_circle {
     return $circle;
 }
 
+sub create_note {
+    my ($x, $y) = @_;
+    
+    my $current_font = $font_btn_w ? $font_btn_w->get_font_name() : 'Sans 14';
+    
+    my $note = {
+        type => 'note',
+        timestamp => ++$global_timestamp,
+        x => $x,
+        y => $y,
+        text => '',
+        font => $current_font,
+        is_open => 1,
+        is_editing => 1,
+        selected => 1,
+        cursor_pos => 0,
+        current_line => 0,
+        current_column => 0
+    };
+    
+    if ($drop_shadow_enabled) {
+        $note->{drop_shadow}     = 1;
+        $note->{shadow_offset_x} = $shadow_offset_x;
+        $note->{shadow_offset_y} = $shadow_offset_y;
+        $note->{shadow_blur}     = $shadow_blur;
+        $note->{shadow_alpha}    = $shadow_alpha;
+        $note->{shadow_color}    = $shadow_base_color->copy();
+    }
+    
+    push @{$items{notes}}, $note;
+    $current_item = $note;
+    return $note;
+}
+
 sub create_freehand_item {
     my ($points) = @_;
     my $freehand = {
@@ -3632,7 +3888,20 @@ sub clone_current_state {
 # =============================================================================
 
 
-# Main Loop:
+
+sub draw_annotations_image_space {
+    my ($cr) = @_;
+
+    for my $type (keys %items) {
+        next if $type eq 'notes';
+        
+        for my $obj (@{$items{$type}}) {
+            draw_item($cr, $obj, 0);
+        }
+    }
+}
+
+
 
 sub draw_image {
     my ($widget, $cr, $event) = @_;
@@ -3648,16 +3917,16 @@ sub draw_image {
     my $render_ratio = 1.0;
 
     if ($preview_surface && $preview_surface != $image_surface) {
-        my $screen_w = $image_surface->get_width() * $scale_factor;
+        my $screen_w = $image_surface->get_width() * $zoom * $monitor_scale;
         if ($screen_w < $preview_surface->get_width() * 1.5) { 
             $render_surface = $preview_surface;
             $render_ratio = $preview_ratio;
         }
     }
 
-    my $cairo_scale = $scale_factor / $render_ratio;
-
+    my $cairo_scale = ($zoom * $monitor_scale) / $render_ratio;
     $cr->scale($cairo_scale, $cairo_scale);
+    
     $cr->set_source_surface($render_surface, 0, 0);
 
     my $pattern = $cr->get_source();
@@ -3726,7 +3995,7 @@ sub draw_image {
     $cr->restore();
 
     my @all_items;
-    foreach my $type (qw(text_items svg_items magnifiers numbered-circles lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines pixelize_items crop_rect)) {
+    foreach my $type (qw(text_items svg_items magnifiers numbered-circles notes lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines pixelize_items crop_rect)) {
         if (exists $items{$type} && defined $items{$type} && ref($items{$type}) eq 'ARRAY') {
      
             foreach my $item (grep { defined $_ } @{$items{$type}}) {
@@ -3740,7 +4009,7 @@ sub draw_image {
     if (@all_items) {
         foreach my $item (@all_items) {
             $cr->save();
-            $cr->scale($scale_factor, $scale_factor);
+            $cr->scale($zoom * $monitor_scale, $zoom * $monitor_scale);
             my $is_anchored_flag = (defined $item->{anchored} && $item->{anchored}) ? 1 : 0;
             draw_item($cr, $item, $is_anchored_flag);
             $cr->restore();
@@ -3749,7 +4018,7 @@ sub draw_image {
 
     if ($is_drawing_freehand && @freehand_points >= 2) {
         $cr->save();
-        $cr->scale($scale_factor, $scale_factor);
+        $cr->scale($zoom * $monitor_scale, $zoom * $monitor_scale);
 
         if ($current_tool eq 'highlighter') {
             $cr->set_line_width(18);
@@ -3774,8 +4043,10 @@ sub draw_image {
     }
 
     if ($is_drawing && defined $start_x && defined $start_y && defined $end_x && defined $end_y) {
+        
         $cr->save();
-        $cr->scale($scale_factor, $scale_factor);
+        $cr->scale($zoom * $monitor_scale, $zoom * $monitor_scale);
+
 
         my $raw_dist = sqrt(($end_x - $start_x)**2 + ($end_y - $start_y)**2);
 
@@ -3792,7 +4063,7 @@ sub draw_image {
              my $h = abs($end_y - $start_y);
              
              $cr->set_source_rgb(1, 1, 1);
-             $cr->set_line_width(2 / $scale_factor);
+             $cr->set_line_width(2 / ($zoom * $monitor_scale));
              $cr->set_dash(5, 5);
              $cr->rectangle($x, $y, $w, $h);
              $cr->stroke();
@@ -3938,7 +4209,6 @@ sub draw_image {
     return FALSE;
 }
 
-# Dispatcher:
 
 sub draw_shadow {
     my ($cr, $item) = @_;
@@ -4266,7 +4536,7 @@ sub draw_item {
   
         $cr->save();
         $cr->set_source_rgb(1, 1, 1); 
-        $cr->set_line_width(2 / $scale_factor); 
+        $cr->set_line_width(2 / ($zoom * $monitor_scale));
         $cr->set_dash(5, 5);
         $cr->rectangle($item->{x1}, $item->{y1}, 
                       $item->{x2} - $item->{x1}, 
@@ -4334,6 +4604,9 @@ sub draw_item {
     elsif ($item->{type} eq 'numbered-circle') {
         draw_numbered_circle($cr, $item);
     }
+    elsif ($item->{type} eq 'note') {
+        draw_note($cr, $item);
+    }
     elsif ($item->{type} eq 'magnifier') {
         draw_magnifier($cr, $item);
     }
@@ -4353,7 +4626,6 @@ sub draw_item {
     return;
 }
 
-# Primitives:
 
 sub draw_line {
     my ($cr, $start_x, $start_y, $end_x, $end_y, $stroke_color, $line_width, $line) = @_;
@@ -4997,7 +5269,7 @@ sub draw_pyramid {
             name => $name,
             vertices => $v,
             area => $area,
-            avg_y => _calculate_avg_y($v)
+            avg_y => calculate_avg_y($v)
         };
 
         if ($name eq 'base') {
@@ -5101,7 +5373,7 @@ sub draw_pyramid {
     return;
 }
 
-sub _calculate_avg_y {
+sub calculate_avg_y {
     my ($vertices) = @_;
     my $sum = 0;
     foreach my $v (@$vertices) { $sum += $v->[1]; }
@@ -5428,6 +5700,262 @@ sub draw_numbered_circle {
     return;
 }
 
+sub draw_note {
+    my ($cr, $note) = @_;
+    return unless $note;
+
+    $cr->new_path();
+
+    my $screen_icon_width = 20; 
+    my $screen_icon_height = 24; 
+    my $icon_width = $screen_icon_width / ($zoom * $monitor_scale);
+    my $icon_height = $screen_icon_height / ($zoom * $monitor_scale);
+    
+    if ($font_btn_w && $note->{is_editing}) {
+        my $current_font = $font_btn_w->get_font_name();
+        $note->{font} = $current_font;
+    }
+    
+    $cr->save();
+    my $icon_x = $note->{x} - $icon_width / 2;
+    my $icon_y = $note->{y} - $icon_height / 2;
+    my $corner_radius = 2 / ($zoom * $monitor_scale);
+    
+    $cr->new_path();
+    $cr->arc($icon_x + $corner_radius, $icon_y + $corner_radius, $corner_radius, pi, 3 * pi / 2);
+    $cr->arc($icon_x + $icon_width - $corner_radius, $icon_y + $corner_radius, $corner_radius, 3 * pi / 2, 0);
+    $cr->arc($icon_x + $icon_width - $corner_radius, $icon_y + $icon_height - $corner_radius, $corner_radius, 0, pi / 2);
+    $cr->arc($icon_x + $corner_radius, $icon_y + $icon_height - $corner_radius, $corner_radius, pi / 2, pi);
+    $cr->close_path();
+    
+    $cr->set_source_rgba(1, 0.9, 0.2, 1); 
+    $cr->fill_preserve();
+    $cr->set_source_rgba(0.8, 0.7, 0, 1); 
+    $cr->set_line_width(1.5 / ($zoom * $monitor_scale));
+    $cr->stroke();
+    $cr->restore();
+    
+    $cr->save();
+    $cr->new_path(); 
+    $cr->select_font_face('Sans', 'normal', 'bold');
+    $cr->set_font_size(16 / ($zoom * $monitor_scale));
+    $cr->set_source_rgba(0, 0, 0, 1);
+    my $extents = $cr->text_extents("N");
+    my $text_x = $note->{x} - ($extents->{width} / 2 + $extents->{x_bearing});
+    my $text_y = $note->{y} - ($extents->{height} / 2 + $extents->{y_bearing});
+    $cr->move_to($text_x, $text_y);
+    $cr->show_text("N");
+    $cr->restore();
+    
+    if ($note->{is_open}) {
+        my $screen_gap = 10;
+        my $screen_corner_radius = 5;
+        my $screen_padding = 10;
+        my $screen_min_width = 100;
+        my $screen_min_height = 40;
+        
+        my $gap = $screen_gap / ($zoom * $monitor_scale);
+        my $corner_radius = $screen_corner_radius / ($zoom * $monitor_scale);
+        my $padding = $screen_padding / ($zoom * $monitor_scale);
+        
+        my $img_width = $image_surface ? $image_surface->get_width() : 1000;
+        
+        my $note_start_x = $note->{x} + $icon_width / 2 + $gap;
+        
+        my ($font_family, $font_size) = $note->{font} =~ /^(.*?)\s+(\d+)$/;
+        $font_family ||= 'Sans';
+        $font_size ||= 14;
+        
+        my $layout = Pango::Cairo::create_layout($cr);
+        my $desc = Pango::FontDescription->from_string($note->{font});
+        $layout->set_font_description($desc);
+        
+        my $text_to_measure = $note->{text};
+        if (!$text_to_measure || length($text_to_measure) == 0) {
+            $text_to_measure = " ";
+        }
+        $layout->set_text($text_to_measure);
+        $layout->set_wrap('word-char');
+        
+        my ($natural_text_width_screen, $text_height_screen) = $layout->get_pixel_size();
+        
+        my $natural_callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        
+        my $natural_callout_width_img = $natural_callout_width_screen / ($zoom * $monitor_scale);
+        my $would_exceed_edge = ($note_start_x + $natural_callout_width_img) > $img_width;
+        
+        my $max_text_width;
+        if ($would_exceed_edge) {
+            my $max_width_img = $img_width - $note_start_x - $padding;
+            my $max_width_screen = $max_width_img * $zoom * $monitor_scale;
+            $max_text_width = $max_width_screen - 2 * $screen_padding;
+            
+            $layout->set_width($max_text_width * 1024);
+            ($natural_text_width_screen, $text_height_screen) = $layout->get_pixel_size();
+        } else {
+            $max_text_width = $natural_text_width_screen;
+        }
+        
+        my $callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        my $callout_height_screen = $text_height_screen + 2 * $screen_padding;
+        
+        $callout_width_screen = max($callout_width_screen, $screen_min_width);
+        $callout_height_screen = max($callout_height_screen, $screen_min_height);
+        
+        my $note_width = $callout_width_screen / ($zoom * $monitor_scale);
+        my $note_height = $callout_height_screen / ($zoom * $monitor_scale);
+        
+        my $note_x = $note->{x} + $icon_width / 2 + $gap;
+        my $note_y = $note->{y} - ($note_height / 2);
+        
+        $cr->save();
+        $cr->new_path();
+        $cr->arc($note_x + $corner_radius, $note_y + $corner_radius, $corner_radius, pi, 3 * pi / 2);
+        $cr->arc($note_x + $note_width - $corner_radius, $note_y + $corner_radius, $corner_radius, 3 * pi / 2, 0);
+        $cr->arc($note_x + $note_width - $corner_radius, $note_y + $note_height - $corner_radius, $corner_radius, 0, pi / 2);
+        $cr->arc($note_x + $corner_radius, $note_y + $note_height - $corner_radius, $corner_radius, pi / 2, pi);
+        $cr->close_path();
+        
+        $cr->set_source_rgba(0, 0, 0, 0.9);
+        $cr->fill_preserve();
+        
+        $cr->set_source_rgba(1, 1, 1, 0.3);
+        $cr->set_line_width(1 / ($zoom * $monitor_scale));
+        $cr->stroke();
+        $cr->restore();
+        
+        if ($note->{selection_start} && $note->{selection_end}) {
+            my $sel_start = $note->{selection_start};
+            my $sel_end = $note->{selection_end};
+            
+            my $sel_layout = Pango::Cairo::create_layout($cr);
+            $sel_layout->set_font_description($desc);
+            if ($would_exceed_edge) {
+                $sel_layout->set_width($max_text_width * 1024);
+            }
+            $sel_layout->set_wrap('word-char');
+            $sel_layout->set_text($note->{text} || " ");
+            
+            use Encode qw(encode);
+            my @lines = split("\n", $note->{text}, -1);
+            
+            my $start_byte_offset = 0;
+            for (my $i = 0; $i < $sel_start->{line}; $i++) {
+                $start_byte_offset += length(encode('UTF-8', $lines[$i])) + 1;
+            }
+            my $start_line_substr = substr($lines[$sel_start->{line}] // '', 0, $sel_start->{column});
+            $start_byte_offset += length(encode('UTF-8', $start_line_substr));
+            
+            my $end_byte_offset = 0;
+            for (my $i = 0; $i < $sel_end->{line}; $i++) {
+                $end_byte_offset += length(encode('UTF-8', $lines[$i])) + 1;
+            }
+            my $end_line_substr = substr($lines[$sel_end->{line}] // '', 0, $sel_end->{column});
+            $end_byte_offset += length(encode('UTF-8', $end_line_substr));
+            
+            my ($start_strong, $start_weak) = $sel_layout->get_cursor_pos($start_byte_offset);
+            my ($end_strong, $end_weak) = $sel_layout->get_cursor_pos($end_byte_offset);
+            
+            $cr->save();
+            $cr->translate($note_x + $padding, $note_y + $padding);
+            $cr->scale(1.0 / ($zoom * $monitor_scale), 1.0 / ($zoom * $monitor_scale));
+            $cr->set_source_rgba(0.3, 0.5, 0.8, 0.5); 
+            
+            my $start_x = $start_strong->{x} / 1024;
+            my $start_y = $start_strong->{y} / 1024;
+            my $start_h = $start_strong->{height} / 1024;
+            my $end_x = $end_strong->{x} / 1024;
+            my $end_y = $end_strong->{y} / 1024;
+            my $end_h = $end_strong->{height} / 1024;
+            
+            if ($sel_start->{line} == $sel_end->{line}) {
+                $cr->rectangle($start_x, $start_y, $end_x - $start_x, $start_h);
+            } else {
+                my $first_line_width = ($max_text_width || 400) - $start_x;
+                $cr->rectangle($start_x, $start_y, $first_line_width, $start_h);
+                
+                for (my $line = $sel_start->{line} + 1; $line < $sel_end->{line}; $line++) {
+                    my $line_y = $start_y + ($line - $sel_start->{line}) * $start_h;
+                    $cr->rectangle(0, $line_y, ($max_text_width || 400), $start_h);
+                }
+                
+                $cr->rectangle(0, $end_y, $end_x, $end_h);
+            }
+            
+            $cr->fill();
+            $cr->restore();
+        }
+        
+        if ($note->{text} && length($note->{text}) > 0) {
+            $cr->save();
+            $cr->translate($note_x + $padding, $note_y + $padding);
+            $cr->scale(1.0 / ($zoom * $monitor_scale), 1.0 / ($zoom * $monitor_scale));
+            $cr->set_source_rgba(1, 1, 1, 1);
+            Pango::Cairo::show_layout($cr, $layout);
+            $cr->restore();
+        }
+        
+        if ($note->{is_editing} && $cursor_visible) {
+            my @lines = split("\n", $note->{text}, -1); 
+            my $validated_line = $note->{current_line};
+            my $validated_col = $note->{current_column};
+            
+            if ($validated_line >= scalar(@lines)) {
+                $validated_line = scalar(@lines) - 1;
+            }
+            if ($validated_line < 0) {
+                $validated_line = 0;
+            }
+            
+            my $current_line_text = $lines[$validated_line] // '';
+            if ($validated_col > length($current_line_text)) {
+                $validated_col = length($current_line_text);
+            }
+            if ($validated_col < 0) {
+                $validated_col = 0;
+            }
+            
+            use Encode qw(encode);
+            my $cursor_offset = 0;
+            for (my $i = 0; $i < $validated_line; $i++) {
+                $cursor_offset += length(encode('UTF-8', $lines[$i])) + 1;
+            }
+            my $line_substr = substr($current_line_text, 0, $validated_col);
+            $cursor_offset += length(encode('UTF-8', $line_substr));
+            
+            my $text_byte_length = length(encode('UTF-8', $note->{text} || ''));
+            if ($cursor_offset > $text_byte_length) {
+                $cursor_offset = $text_byte_length;
+            }
+            
+            my $cursor_layout = Pango::Cairo::create_layout($cr);
+            $cursor_layout->set_font_description($desc);
+            if ($would_exceed_edge) {
+                $cursor_layout->set_width($max_text_width * 1024);
+            }
+            $cursor_layout->set_wrap('word-char');
+            $cursor_layout->set_text($note->{text} || " ");
+            
+            my ($strong, $weak) = $cursor_layout->get_cursor_pos($cursor_offset);
+            my $cursor_x_screen = $strong->{x} / 1024 + $screen_padding;
+            my $cursor_y_screen = $strong->{y} / 1024 + $screen_padding;
+            my $cursor_height_screen = $strong->{height} / 1024;
+            
+            my $cursor_x = $note_x + $cursor_x_screen / ($zoom * $monitor_scale);
+            my $cursor_y = $note_y + $cursor_y_screen / ($zoom * $monitor_scale);
+            my $cursor_height = $cursor_height_screen / ($zoom * $monitor_scale);
+            
+            $cr->set_source_rgba(1, 1, 1, 1);
+            $cr->set_line_width(2 / ($zoom * $monitor_scale));
+            $cr->move_to($cursor_x, $cursor_y);
+            $cr->line_to($cursor_x, $cursor_y + $cursor_height);
+            $cr->stroke();
+        }
+    }
+    
+    return;
+}
+
 sub draw_freehand_line {
     my ($cr, $points, $stroke_color, $line_width, $item) = @_;
     return unless $points && @$points >= 4;
@@ -5646,7 +6174,6 @@ sub draw_bounding_box_dash_line {
     return;
 }
 
-# Decorations:
 
 sub draw_selection_handles {
     my ($cr, $item) = @_;
@@ -5790,8 +6317,9 @@ sub draw_selection_handles {
         $cr->stroke();
         $cr->set_dash(0);
         
-        my $handle_size = 100;
-        my $handle_gap = 15;
+        my $base_handle_size = 30;
+        my $handle_size = $base_handle_size / ($zoom * $monitor_scale);
+        my $handle_gap = 2 / ($zoom * $monitor_scale);
         my $handle_x = $box_x - $handle_size - $handle_gap;
         my $handle_y = $box_y + ($box_height / 2);
         
@@ -5828,20 +6356,22 @@ sub draw_selection_handles {
             $cr->paint();
             $cr->restore();
         } else {
+            my $cross_size = $handle_size * 0.4;
+            
             $cr->set_source_rgba(1, 1, 1, 1);
             $cr->arc($handle_x, $handle_y, $handle_size / 2, 0, 2 * 3.14159);
             $cr->fill();
             
             $cr->set_source_rgba(0, 0, 0, 1);
-            $cr->set_line_width(3.0);
+            $cr->set_line_width(3.0 / ($zoom * $monitor_scale));
             $cr->arc($handle_x, $handle_y, $handle_size / 2, 0, 2 * 3.14159);
             $cr->stroke();
             
-            $cr->set_line_width(4.0);
-            $cr->move_to($handle_x, $handle_y - 20);
-            $cr->line_to($handle_x, $handle_y + 20);
-            $cr->move_to($handle_x - 20, $handle_y);
-            $cr->line_to($handle_x + 20, $handle_y);
+            $cr->set_line_width(4.0 / ($zoom * $monitor_scale));
+            $cr->move_to($handle_x, $handle_y - $cross_size);
+            $cr->line_to($handle_x, $handle_y + $cross_size);
+            $cr->move_to($handle_x - $cross_size, $handle_y);
+            $cr->line_to($handle_x + $cross_size, $handle_y);
             $cr->stroke();
         }
     }
@@ -5998,7 +6528,7 @@ sub draw_handle {
 
     $cr->save();
 
-    my $visual_size = $handle_size * 1.5 / $scale_factor;
+    my $visual_size = $handle_size * 1.5 / ($zoom * $monitor_scale);
 
     my $active_id = ref($drag_handle) eq 'ARRAY' ?
         join('-', @$drag_handle) : $drag_handle;
@@ -6021,7 +6551,7 @@ sub draw_handle {
     $cr->fill_preserve();
 
     $cr->set_source_rgba(0, 0, 0, 1.0);  
-    $cr->set_line_width(0.3 / $scale_factor);  
+    $cr->set_line_width(0.3 / ($zoom * $monitor_scale));
     $cr->stroke();
 
     $cr->restore();
@@ -6149,7 +6679,7 @@ sub draw_rectangle_measurements {
     if ($item->{show_area}) {
         my $center_x = ($item->{x1} + $item->{x2}) / 2;
         my $center_y = ($item->{y1} + $item->{y2}) / 2;
-        my $area_text = sprintf("%.1f px²", $area);
+        my $area_text = sprintf("%.1f pxÃƒâ€šÃ‚Â²", $area);
         draw_measurement_text($cr, $area_text, $center_x, $center_y);
     }
 
@@ -6207,7 +6737,7 @@ sub draw_tetragon_measurements {
             );
             push @angles, $angle;
             
-            my $angle_text = sprintf("%.1f°", $angle);
+            my $angle_text = sprintf("%.1fÃƒâ€šÃ‚Â°", $angle);
             draw_angle_marker($cr, $vertices[$i][0], $vertices[$i][1], $angle_text);
         }
     }
@@ -6223,7 +6753,7 @@ sub draw_tetragon_measurements {
         $center_x /= 4;
         $center_y /= 4;
         
-        my $area_text = sprintf("%.1f px²", $area);
+        my $area_text = sprintf("%.1f pxÃƒâ€šÃ‚Â²", $area);
         draw_measurement_text($cr, $area_text, $center_x, $center_y);
     }
     
@@ -6269,7 +6799,7 @@ sub draw_pyramid_measurements {
         my $center_x = ($item->{base_left} + $item->{base_right}) / 2;
         my $center_y = ($item->{base_front} + $item->{base_back}) / 2;
         
-        my $area_text = sprintf("%.1f px²", $area);
+        my $area_text = sprintf("%.1f pxÃƒâ€šÃ‚Â²", $area);
         draw_measurement_text($cr, $area_text, $center_x, $center_y);
     }
 
@@ -6319,7 +6849,7 @@ sub draw_face_angles {
             $vertices->[$next]
         );
         
-        my $angle_text = sprintf("%.1f°", $angle);
+        my $angle_text = sprintf("%.1fÃƒâ€šÃ‚Â°", $angle);
         draw_angle_marker($cr, $vertices->[$i][0], $vertices->[$i][1], $angle_text);
     }
     
@@ -6339,7 +6869,7 @@ sub draw_face_angles_with_offset {
             $vertices->[$next]
         );
         
-        my $angle_text = sprintf("%.1f°", $angle);
+        my $angle_text = sprintf("%.1fÃƒâ€šÃ‚Â°", $angle);
 
         my $marker_x = $vertices->[$i][0] + $offset_x;
         my $marker_y = $vertices->[$i][1] + $offset_y;
@@ -6414,14 +6944,13 @@ sub draw_angle_marker {
 # SECTION 7. MATH & GEOMETRY Hit (Calculations)
 # =============================================================================
 
-# Hit Tests:
 
 sub check_item_selection {
     my ($widget, $x, $y) = @_;
     my ($img_x, $img_y) = window_to_image_coords($widget, $x, $y);
 
     my @all_items;
-    foreach my $type (qw(pixelize_items text_items svg_items magnifiers numbered-circles lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines)) {
+    foreach my $type (qw(pixelize_items notes text_items svg_items magnifiers numbered-circles lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines)) {
         next unless exists $items{$type} && defined $items{$type} && ref($items{$type}) eq 'ARRAY';
         push @all_items, @{$items{$type}};
     }
@@ -6474,6 +7003,10 @@ sub check_item_selection {
         }
         elsif ($item->{type} eq 'numbered-circle') {
             $handle = get_circle_handle($img_x, $img_y, $item);
+            $item_hit = defined $handle;
+        }
+        elsif ($item->{type} eq 'note') {
+            $handle = get_note_handle($img_x, $img_y, $item);
             $item_hit = defined $handle;
         }
         elsif ($item->{type} eq 'magnifier') {
@@ -6553,6 +7086,9 @@ sub is_point_near_item {
     }
     elsif ($item->{type} eq 'numbered-circle') {
         return is_point_in_circle($x, $y, $item);
+    }
+    elsif ($item->{type} eq 'note') {
+        return is_point_in_note($x, $y, $item);
     }
     elsif ($item->{type} eq 'magnifier') {
         return is_point_in_magnifier($x, $y, $item);
@@ -6715,6 +7251,172 @@ sub is_point_in_circle {
     return $distance <= $item->{radius};
 }
 
+sub is_point_in_note {
+    my ($x, $y, $note) = @_;
+    return 0 unless $note;
+    
+    my $screen_icon_width = 20;
+    my $screen_icon_height = 24;
+    my $icon_width = $screen_icon_width / ($zoom * $monitor_scale);
+    my $icon_height = $screen_icon_height / ($zoom * $monitor_scale);
+    
+    my $icon_x = $note->{x} - $icon_width / 2;
+    my $icon_y = $note->{y} - $icon_height / 2;
+    
+    if ($x >= $icon_x && $x <= $icon_x + $icon_width &&
+        $y >= $icon_y && $y <= $icon_y + $icon_height) {
+        return 1;
+    }
+    
+    if ($note->{is_open}) {
+        my $screen_gap = 10;
+        my $screen_padding = 10;
+        my $screen_min_width = 100;
+        my $screen_min_height = 40;
+        
+        my $gap = $screen_gap / ($zoom * $monitor_scale);
+        my $padding = $screen_padding / ($zoom * $monitor_scale);
+        
+        my $img_width = $image_surface ? $image_surface->get_width() : 1000;
+        my $note_start_x = $note->{x} + $icon_width / 2 + $gap;
+        
+        my ($font_family, $font_size) = $note->{font} =~ /^(.*?)\s+(\d+)$/;
+        $font_family ||= 'Sans';
+        $font_size ||= 14;
+        
+        my $temp_surface = Cairo::ImageSurface->create('argb32', 10, 10);
+        my $temp_cr = Cairo::Context->create($temp_surface);
+        my $temp_layout = Pango::Cairo::create_layout($temp_cr);
+        my $desc = Pango::FontDescription->from_string($note->{font});
+        $temp_layout->set_font_description($desc);
+        
+        my $text_to_measure = $note->{text};
+        if (!$text_to_measure || length($text_to_measure) == 0) {
+            $text_to_measure = " ";
+        }
+        $temp_layout->set_text($text_to_measure);
+        $temp_layout->set_wrap('word-char');
+        
+        my ($natural_text_width_screen, $text_height_screen) = $temp_layout->get_pixel_size();
+        
+        my $natural_callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        my $natural_callout_width_img = $natural_callout_width_screen / ($zoom * $monitor_scale);
+        my $would_exceed_edge = ($note_start_x + $natural_callout_width_img) > $img_width;
+        
+        if ($would_exceed_edge) {
+            my $max_width_img = $img_width - $note_start_x - $padding;
+            my $max_width_screen = $max_width_img * $zoom * $monitor_scale;
+            my $max_text_width = $max_width_screen - 2 * $screen_padding;
+            $temp_layout->set_width($max_text_width * 1024);
+            ($natural_text_width_screen, $text_height_screen) = $temp_layout->get_pixel_size();
+        }
+        
+        my $callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        my $callout_height_screen = $text_height_screen + 2 * $screen_padding;
+        
+        $callout_width_screen = max($callout_width_screen, $screen_min_width);
+        $callout_height_screen = max($callout_height_screen, $screen_min_height);
+        
+        my $note_width = $callout_width_screen / ($zoom * $monitor_scale);
+        my $note_height = $callout_height_screen / ($zoom * $monitor_scale);
+        
+        my $note_x = $note->{x} + $icon_width / 2 + $gap;
+        my $note_y = $note->{y} - ($note_height / 2);
+        
+        $temp_surface->finish();
+        
+        if ($x >= $note_x && $x <= $note_x + $note_width &&
+            $y >= $note_y && $y <= $note_y + $note_height) {
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
+sub get_note_handle {
+    my ($x, $y, $note) = @_;
+    return unless $note;
+    
+    my $screen_icon_width = 20;
+    my $screen_icon_height = 24;
+    my $icon_width = $screen_icon_width / ($zoom * $monitor_scale);
+    my $icon_height = $screen_icon_height / ($zoom * $monitor_scale);
+    
+    my $icon_x = $note->{x} - $icon_width / 2;
+    my $icon_y = $note->{y} - $icon_height / 2;
+    
+    if ($x >= $icon_x && $x <= $icon_x + $icon_width &&
+        $y >= $icon_y && $y <= $icon_y + $icon_height) {
+        return 'icon';
+    }
+    
+    if ($note->{is_open}) {
+        my $screen_gap = 10;
+        my $screen_padding = 10;
+        my $screen_min_width = 100;
+        my $screen_min_height = 40;
+        
+        my $gap = $screen_gap / ($zoom * $monitor_scale);
+        my $padding = $screen_padding / ($zoom * $monitor_scale);
+        
+        my $img_width = $image_surface ? $image_surface->get_width() : 1000;
+        my $note_start_x = $note->{x} + $icon_width / 2 + $gap;
+        
+        my ($font_family, $font_size) = $note->{font} =~ /^(.*?)\s+(\d+)$/;
+        $font_family ||= 'Sans';
+        $font_size ||= 14;
+        
+        my $temp_surface = Cairo::ImageSurface->create('argb32', 10, 10);
+        my $temp_cr = Cairo::Context->create($temp_surface);
+        my $temp_layout = Pango::Cairo::create_layout($temp_cr);
+        my $desc = Pango::FontDescription->from_string($note->{font});
+        $temp_layout->set_font_description($desc);
+        
+        my $text_to_measure = $note->{text};
+        if (!$text_to_measure || length($text_to_measure) == 0) {
+            $text_to_measure = " ";
+        }
+        $temp_layout->set_text($text_to_measure);
+        $temp_layout->set_wrap('word-char');
+        
+        my ($natural_text_width_screen, $text_height_screen) = $temp_layout->get_pixel_size();
+        
+        my $natural_callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        my $natural_callout_width_img = $natural_callout_width_screen / ($zoom * $monitor_scale);
+        my $would_exceed_edge = ($note_start_x + $natural_callout_width_img) > $img_width;
+        
+        if ($would_exceed_edge) {
+            my $max_width_img = $img_width - $note_start_x - $padding;
+            my $max_width_screen = $max_width_img * $zoom * $monitor_scale;
+            my $max_text_width = $max_width_screen - 2 * $screen_padding;
+            $temp_layout->set_width($max_text_width * 1024);
+            ($natural_text_width_screen, $text_height_screen) = $temp_layout->get_pixel_size();
+        }
+        
+        my $callout_width_screen = $natural_text_width_screen + 2 * $screen_padding;
+        my $callout_height_screen = $text_height_screen + 2 * $screen_padding;
+        
+        $callout_width_screen = max($callout_width_screen, $screen_min_width);
+        $callout_height_screen = max($callout_height_screen, $screen_min_height);
+        
+        my $note_width = $callout_width_screen / ($zoom * $monitor_scale);
+        my $note_height = $callout_height_screen / ($zoom * $monitor_scale);
+        
+        my $note_x = $note->{x} + $icon_width / 2 + $gap;
+        my $note_y = $note->{y} - ($note_height / 2);
+        
+        $temp_surface->finish();
+        
+        if ($x >= $note_x && $x <= $note_x + $note_width &&
+            $y >= $note_y && $y <= $note_y + $note_height) {
+            return 'callout';
+        }
+    }
+    
+    return;
+}
+
 sub is_point_in_text {
     my ($x, $y, $text_item) = @_;
     return 0 unless $text_item && defined $text_item->{text};
@@ -6724,7 +7426,7 @@ sub is_point_in_text {
     my $box_width = $text_item->{width};
     my $box_height = $text_item->{height};
 
-    my $padding = 15 / ($scale_factor || 1); 
+    my $padding = 15 / ($zoom * $monitor_scale || 1);
 
     if ($x >= $box_x - $padding &&
         $x <= $box_x + $box_width + $padding &&
@@ -6950,7 +7652,6 @@ sub is_point_in_face {
     return $inside;
 }
 
-# Handle Detection:
 
 sub get_item_handle {
     my ($x, $y, $item) = @_;
@@ -7210,9 +7911,10 @@ sub get_text_handle {
     my $box_width = $text_item->{width};
     my $box_height = $text_item->{height};
 
-    my $handle_size = 100;
+    my $base_handle_size = 30;
+    my $handle_size = $base_handle_size / ($zoom * $monitor_scale);
     my $handle_radius = $handle_size / 2;
-    my $handle_gap = 15;
+    my $handle_gap = 2 / ($zoom * $monitor_scale);
     my $handle_x = $box_x - $handle_size - $handle_gap;
     my $handle_y = $box_y + ($box_height / 2);
     
@@ -7288,6 +7990,248 @@ sub set_cursor_position_from_click {
     $text_item->{current_column} = max(0, min($char_pos, length($current_line_text)));
     
     $temp_surface->finish();
+}
+
+sub set_note_cursor_position_from_click {
+    my ($note, $click_x, $click_y) = @_;
+    return unless $note && defined $click_x && defined $click_y;
+
+    my $screen_icon_width = 20;
+    my $screen_icon_height = 24;
+    my $screen_gap = 10;
+    my $screen_padding = 10;
+    
+    my $icon_width = $screen_icon_width / ($zoom * $monitor_scale);
+    my $gap = $screen_gap / ($zoom * $monitor_scale);
+    my $padding = $screen_padding / ($zoom * $monitor_scale);
+    
+    my $img_width = $image_surface ? $image_surface->get_width() : 1000;
+    my $note_start_x = $note->{x} + $icon_width / 2 + $gap;
+    
+    my ($font_family, $font_size) = $note->{font} =~ /^(.*?)\s+(\d+)$/;
+    $font_family ||= 'Sans';
+    $font_size ||= 14;
+    
+    my $temp_surface = Cairo::ImageSurface->create('argb32', 10, 10);
+    my $temp_cr = Cairo::Context->create($temp_surface);
+    my $temp_layout = Pango::Cairo::create_layout($temp_cr);
+    my $desc = Pango::FontDescription->from_string($note->{font});
+    $temp_layout->set_font_description($desc);
+    
+    $temp_layout->set_text($note->{text} || " ");
+    my ($natural_width, undef) = $temp_layout->get_pixel_size();
+    my $natural_width_img = ($natural_width + 2 * $screen_padding) / ($zoom * $monitor_scale);
+    my $would_exceed = ($note_start_x + $natural_width_img) > $img_width;
+    
+    if ($would_exceed) {
+        my $max_width_img = $img_width - $note_start_x - $padding;
+        my $max_width_screen = $max_width_img * $zoom * $monitor_scale;
+        my $max_text_width = $max_width_screen - 2 * $screen_padding;
+        $temp_layout->set_width($max_text_width * 1024);
+    }
+    $temp_layout->set_wrap('word-char');
+    
+    my $callout_x = $note_start_x + $padding;
+    my $note_height_screen = 100; 
+    if (length($note->{text}) > 0) {
+        $temp_layout->set_text($note->{text});
+        (undef, $note_height_screen) = $temp_layout->get_pixel_size();
+    }
+    my $note_height = ($note_height_screen + 2 * $screen_padding) / ($zoom * $monitor_scale);
+    my $callout_y = $note->{y} - ($note_height / 2) + $padding;
+    
+    my $relative_x = ($click_x - $callout_x) * $zoom * $monitor_scale;
+    my $relative_y = ($click_y - $callout_y) * $zoom * $monitor_scale;
+    
+    $relative_x = max(0, $relative_x);
+    $relative_y = max(0, $relative_y);
+    
+    my ($index, $trailing) = $temp_layout->xy_to_index($relative_x * 1024, $relative_y * 1024);
+    
+    my $text = $note->{text} || '';
+    my @lines = split("\n", $text, -1);
+    
+    $temp_layout->set_text("M");
+    my (undef, $line_height_screen) = $temp_layout->get_pixel_size();
+    
+    my $clicked_line_idx = int($relative_y / $line_height_screen);
+    $clicked_line_idx = max(0, min($clicked_line_idx, scalar(@lines) - 1));
+    
+    my $temp_layout2 = Pango::Cairo::create_layout($temp_cr);
+    $temp_layout2->set_font_description($desc);
+    
+    if ($would_exceed) {
+        my $max_width_img = $img_width - $note_start_x - $padding;
+        my $max_width_screen = $max_width_img * $zoom * $monitor_scale;
+        my $max_text_width = $max_width_screen - 2 * $screen_padding;
+        $temp_layout2->set_width($max_text_width * 1024);
+        $temp_layout2->set_wrap('word-char');
+    }
+    
+    $temp_layout2->set_text($text);
+    
+    my $line_count = $temp_layout2->get_line_count();
+    my $pango_line_idx = min($clicked_line_idx, $line_count - 1);
+    
+    if ($pango_line_idx >= 0) {
+        my $pango_line = $temp_layout2->get_line($pango_line_idx);
+        if ($pango_line) {
+            my (undef, $line_extents) = $pango_line->get_extents();
+            my $line_width = $line_extents->{width} / 1024;
+            
+            if ($relative_x > $line_width + 20) { 
+                my $line_start_index = $pango_line->get_start_index();
+                my $line_length = $pango_line->get_length();
+                my $line_end_index = $line_start_index + $line_length;
+                
+                use Encode qw(encode decode);
+                my $text_bytes = encode('UTF-8', $text);
+                my $text_before_end_bytes = substr($text_bytes, 0, $line_end_index);
+                my $text_before_end = decode('UTF-8', $text_before_end_bytes);
+                my $char_pos = length($text_before_end);
+                
+                my $current_pos = 0;
+                my $line_idx = 0;
+                my $col_idx = 0;
+                
+                for my $i (0 .. $#lines) {
+                    my $line_len = length($lines[$i]);
+                    if ($char_pos <= $current_pos + $line_len) {
+                        $line_idx = $i;
+                        $col_idx = $char_pos - $current_pos;
+                        last;
+                    }
+                    $current_pos += $line_len + 1;
+                }
+                
+                $note->{current_line} = $line_idx;
+                $note->{current_column} = $col_idx;
+                $temp_surface->finish();
+                return;
+            }
+        }
+    }
+    
+    use Encode qw(decode);
+    my $text_bytes = encode('UTF-8', $text);
+    my $text_before_cursor_bytes = substr($text_bytes, 0, $index);
+    my $text_before_cursor = decode('UTF-8', $text_before_cursor_bytes);
+    my $char_pos = length($text_before_cursor);
+    
+    $char_pos += 1 if $trailing;
+    
+    my $current_pos = 0;
+    my $line_idx = 0;
+    my $col_idx = 0;
+    
+    for my $i (0 .. $#lines) {
+        my $line_len = length($lines[$i]);
+        if ($char_pos <= $current_pos + $line_len) {
+            $line_idx = $i;
+            $col_idx = $char_pos - $current_pos;
+            last;
+        }
+        $current_pos += $line_len + 1; 
+    }
+    
+    $col_idx = min($col_idx, length($lines[$line_idx]));
+    
+    $note->{current_line} = $line_idx;
+    $note->{current_column} = $col_idx;
+    
+    $temp_surface->finish();
+}
+
+sub select_word_at_position {
+    my ($note, $click_x, $click_y) = @_;
+    return unless $note && defined $click_x && defined $click_y;
+    
+    set_note_cursor_position_from_click($note, $click_x, $click_y);
+    
+    my $text = $note->{text} || '';
+    return if length($text) == 0;
+    
+    my @lines = split("\n", $text, -1);
+    my $line = $lines[$note->{current_line}] // '';
+    my $col = $note->{current_column};
+    
+    return if $col >= length($line) || substr($line, $col, 1) =~ /\s/;
+    
+    my $start_col = $col;
+    my $end_col = $col;
+    
+    while ($start_col > 0 && substr($line, $start_col - 1, 1) =~ /\w/) {
+        $start_col--;
+    }
+    
+    while ($end_col < length($line) && substr($line, $end_col, 1) =~ /\w/) {
+        $end_col++;
+    }
+    
+    $note->{selection_start} = {
+        line => $note->{current_line},
+        column => $start_col
+    };
+    $note->{selection_end} = {
+        line => $note->{current_line},
+        column => $end_col
+    };
+    
+    $note->{current_line} = $note->{current_line};
+    $note->{current_column} = $end_col;
+}
+
+sub select_all_note_text {
+    my ($note) = @_;
+    return unless $note;
+    
+    my $text = $note->{text} || '';
+    return if length($text) == 0;
+    
+    my @lines = split("\n", $text, -1);
+    
+    $note->{selection_start} = {
+        line => 0,
+        column => 0
+    };
+    $note->{selection_end} = {
+        line => scalar(@lines) - 1,
+        column => length($lines[-1])
+    };
+    
+    $note->{current_line} = scalar(@lines) - 1;
+    $note->{current_column} = length($lines[-1]);
+}
+
+sub delete_note_selection {
+    my ($note) = @_;
+    return unless $note && $note->{selection_start} && $note->{selection_end};
+    
+    my $sel_start = $note->{selection_start};
+    my $sel_end = $note->{selection_end};
+    
+    my @lines = split("\n", $note->{text}, -1);
+    
+    if ($sel_start->{line} == $sel_end->{line}) {
+        my $line = $lines[$sel_start->{line}];
+        my $before = substr($line, 0, $sel_start->{column});
+        my $after = substr($line, $sel_end->{column});
+        $lines[$sel_start->{line}] = $before . $after;
+    } else {
+        my $first_line = $lines[$sel_start->{line}];
+        my $last_line = $lines[$sel_end->{line}];
+        my $before = substr($first_line, 0, $sel_start->{column});
+        my $after = substr($last_line, $sel_end->{column});
+        
+        splice(@lines, $sel_start->{line}, $sel_end->{line} - $sel_start->{line} + 1, $before . $after);
+    }
+    
+    $note->{text} = join("\n", @lines);
+    $note->{current_line} = $sel_start->{line};
+    $note->{current_column} = $sel_start->{column};
+    
+    delete $note->{selection_start};
+    delete $note->{selection_end};
 }
 
 sub get_circle_handle {
@@ -7404,12 +8348,11 @@ sub get_handle_threshold {
 
     my $base_threshold = $handle_size * 2;
     
-    my $adjusted_threshold = $base_threshold / $scale_factor;
+    my $adjusted_threshold = $base_threshold / ($zoom * $monitor_scale);
     
     return $adjusted_threshold;
 }
 
-# Geometry & Math:
 
 sub pixel_align {
     my ($coord, $l_width) = @_; 
@@ -7423,13 +8366,13 @@ sub pixel_align {
 sub get_image_offset {
     my ($widget) = @_;
 
-    my $widget_width = $widget->get_allocated_width();
+    my $widget_width  = $widget->get_allocated_width();
     my $widget_height = $widget->get_allocated_height();
 
-    my $scaled_width = $image_surface->get_width() * $scale_factor;
-    my $scaled_height = $image_surface->get_height() * $scale_factor;
+    my $scaled_width  = $image_surface->get_width()  * $zoom * $monitor_scale;
+    my $scaled_height = $image_surface->get_height() * $zoom * $monitor_scale;
 
-    my $x_offset = ($widget_width - $scaled_width) / 2;
+    my $x_offset = ($widget_width  - $scaled_width)  / 2;
     my $y_offset = ($widget_height - $scaled_height) / 2;
 
     $x_offset = max(0, $x_offset);
@@ -7438,12 +8381,13 @@ sub get_image_offset {
     return ($x_offset, $y_offset);
 }
 
+
 sub window_to_image_coords {
     my ($widget, $x, $y) = @_;
     my ($x_offset, $y_offset) = get_image_offset($widget);
 
-    my $image_x = ($x - $x_offset) / $scale_factor;
-    my $image_y = ($y - $y_offset) / $scale_factor;
+    my $image_x = ($x - $x_offset) / ($zoom * $monitor_scale);
+    my $image_y = ($y - $y_offset) / ($zoom * $monitor_scale);
 
     return ($image_x, $image_y);
 }
@@ -8379,7 +9323,6 @@ sub get_freehand_bounds {
     return ($min_x, $max_x, $min_y, $max_y);
 }
 
-# Modification Logic:
 
 sub handle_shape_drag {
     my ($item, $handle, $dx, $dy, $curr_x, $curr_y, $event) = @_;
@@ -8442,6 +9385,13 @@ sub handle_shape_drag {
                 }
             }
         }
+    
+    elsif (defined $item->{type} && $item->{type} eq 'note') {
+        if ($handle eq 'icon') {
+            $item->{x} += $dx;
+            $item->{y} += $dy;
+        }
+    }
 
         elsif (defined $item->{type} && ($item->{type} eq 'svg')) {
         
@@ -9294,7 +10244,6 @@ sub apply_crop {
     }
     $current_item = undef;
 
-    $scale_factor = 1.0; 
     zoom_fit_best();     
     $current_tool = 'select'; 
     update_tool_widgets('select'); 
@@ -9310,7 +10259,6 @@ sub apply_crop {
 # =============================================================================
 
 
-# UI Construction:
 
 sub create_scrolled_window {
     my $scrolled_window = Gtk3::ScrolledWindow->new();
@@ -9888,8 +10836,8 @@ sub update_recent_files_menu {
 sub update_drawing_area_size {
     return unless $image_surface && $drawing_area;
 
-    my $scaled_width = $image_surface->get_width() * $scale_factor;
-    my $scaled_height = $image_surface->get_height() * $scale_factor;
+    my $scaled_width  = $image_surface->get_width()  * $zoom * $monitor_scale;
+    my $scaled_height = $image_surface->get_height() * $zoom * $monitor_scale;
 
     $drawing_area->set_size_request($scaled_width, $scaled_height);
 
@@ -9918,7 +10866,6 @@ sub update_drawing_area_size {
     return;
 }
 
-# Dialogs:
 
 sub show_shortcuts_dialog {
     my ($parent) = @_;
@@ -10500,7 +11447,6 @@ sub toggle_measure_type {
 }
 
 
-# Operations:
 
 sub load_icon_sizes {
     return unless -f $icon_sizes_file;
@@ -10544,76 +11490,57 @@ sub get_gtk_icon_size {
 
 sub zoom_in {
     return unless $image_surface;
-
-    $scale_factor *= 1.1;  
-
-    update_drawing_area_size();
-
-    $drawing_area->signal_connect('size-allocate' => sub {
-        my ($drawing_area, $allocation) = @_;
-
-        my $scrolled_window = $drawing_area->get_parent;
-        while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
-            $scrolled_window = $scrolled_window->get_parent;
-        }
-        return unless $scrolled_window;
-
-        my $viewport = $scrolled_window->get_child;
-        my $view_width = $viewport->get_allocated_width;
-        my $view_height = $viewport->get_allocated_height;
-
-        center_image($scrolled_window, $view_width, $view_height);
-
-        $drawing_area->signal_handler_disconnect($drawing_area->signal_connect('size-allocate' => sub {}));
-    });
-
-    $drawing_area->queue_resize();
-    $drawing_area->queue_draw();
-    
-    return;
+    zoom_at_center(1.1);
 }
 
 sub zoom_out {
     return unless $image_surface;
+    zoom_at_center(0.9);
+}
 
-    $scale_factor *= 0.9;
-    if ($scale_factor < 0.1) { $scale_factor = 0.1; }
+sub zoom_at_center {
+    my ($factor) = @_;
+    my $old_zoom = $zoom;
+    
+    $zoom *= $factor;
+    $zoom = max(0.05, min(50.0, $zoom));
+    
+    my $scrolled_window = $drawing_area->get_parent;
+    while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
+        $scrolled_window = $scrolled_window->get_parent;
+    }
+    return unless $scrolled_window;
 
-    update_drawing_area_size();
-
-    $drawing_area->signal_connect('size-allocate' => sub {
-        my ($drawing_area, $allocation) = @_;
-
-        my $scrolled_window = $drawing_area->get_parent;
-        while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
-            $scrolled_window = $scrolled_window->get_parent;
-        }
-        return unless $scrolled_window;
+    my $hadj = $scrolled_window->get_hadjustment;
+    my $vadj = $scrolled_window->get_vadjustment;
+    
+    if ($hadj && $vadj) {
+        my $ratio = $zoom / $old_zoom;
 
         my $viewport = $scrolled_window->get_child;
-        my $view_width = $viewport->get_allocated_width;
-        my $view_height = $viewport->get_allocated_height;
+        return unless $viewport;
+        
+        my $mid_x = $viewport->get_allocated_width / 2;
+        my $mid_y = $viewport->get_allocated_height / 2;
 
-        center_image($scrolled_window, $view_width, $view_height);
+        my $new_h = ($hadj->get_value() + $mid_x) * $ratio - $mid_x;
+        my $new_v = ($vadj->get_value() + $mid_y) * $ratio - $mid_y;
 
-        $drawing_area->signal_handler_disconnect($drawing_area->signal_connect('size-allocate' => sub {}));
-    });
+        update_drawing_area_size();
 
-    $drawing_area->queue_resize();
-    $drawing_area->queue_draw();
+        $hadj->set_value($new_h);
+        $vadj->set_value($new_v);
+    } else {
+        update_drawing_area_size();
+    }
     
-    return;
+    $drawing_area->queue_draw();
 }
 
 sub zoom_original {
     return unless $image_surface;
 
-    my $monitor_scale = 1;
-    if (defined $window && $window->get_window()) {
-        $monitor_scale = $window->get_scale_factor();
-    }
-
-    $scale_factor = 1.0 / $monitor_scale;
+    $zoom = 1.0;
 
     my ($win_width, $win_height) = $window->get_size();
 
@@ -10645,23 +11572,21 @@ sub center_image {
 
     my $hadj = $scrolled_window->get_hadjustment;
     my $vadj = $scrolled_window->get_vadjustment;
-
     return unless $hadj && $vadj;
 
-    my $image_width = $image_surface->get_width * $scale_factor;
-    my $image_height = $image_surface->get_height * $scale_factor;
+    my $image_width  = $image_surface->get_width  * $zoom * $monitor_scale;
+    my $image_height = $image_surface->get_height * $zoom * $monitor_scale;
 
-    my $h_value = max(0, ($image_width - $view_width) / 2);
+    my $h_value = max(0, ($image_width  - $view_width)  / 2);
     my $v_value = max(0, ($image_height - $view_height) / 2);
 
     $hadj->set_value($h_value);
     $vadj->set_value($v_value);
-    
+
     return;
 }
 
 sub zoom_fit_best {
-
     return unless ($image_surface && $drawing_area);
 
     my $scrolled_window = $drawing_area->get_parent;
@@ -10671,44 +11596,26 @@ sub zoom_fit_best {
     return unless $scrolled_window;
 
     my $viewport = $scrolled_window->get_child;
-    my $view_width = $viewport->get_allocated_width;
+    my $view_width  = $viewport->get_allocated_width;
     my $view_height = $viewport->get_allocated_height;
 
-    my $image_width = $image_surface->get_width;
+    my $image_width  = $image_surface->get_width;
     my $image_height = $image_surface->get_height;
 
-    my $scale_x = $view_width / $image_width;
-    my $scale_y = $view_height / $image_height;
+    my $scale_x = $view_width  / ($image_width  * $monitor_scale);
+    my $scale_y = $view_height / ($image_height * $monitor_scale);
 
-    $scale_factor = min($scale_x, $scale_y);
-
-    $scale_factor *= 0.99;
+    $zoom = min($scale_x, $scale_y) * 0.99;
+    $zoom = max(0.05, min(50.0, $zoom));
 
     update_drawing_area_size();
-
-    $drawing_area->signal_connect('size-allocate' => sub {
-        my ($drawing_area, $allocation) = @_;
-
-        my $scrolled_window = $drawing_area->get_parent;
-        while ($scrolled_window && !$scrolled_window->isa('Gtk3::ScrolledWindow')) {
-            $scrolled_window = $scrolled_window->get_parent;
-        }
-        return unless $scrolled_window;
-
-        my $viewport = $scrolled_window->get_child;
-        my $view_width = $viewport->get_allocated_width;
-        my $view_height = $viewport->get_allocated_height;
-
-        center_image($scrolled_window, $view_width, $view_height);
-
-        $drawing_area->signal_handler_disconnect($drawing_area->signal_connect('size-allocate' => sub {}));
-    });
-
-    $drawing_area->queue_resize();
     $drawing_area->queue_draw();
-    
+
+    center_image($scrolled_window, $view_width, $view_height);
+
     return;
 }
+
 
 sub start_panning {
     my ($x, $y) = @_;
@@ -11008,6 +11915,11 @@ sub select_item {
         $drag_handle = undef;
     }
     
+    if ($item->{type} eq 'note' && $handle eq 'callout') {
+        $dragging = 0;
+        $drag_handle = undef;
+    }
+    
     if ($item->{type} eq 'text') {
         if ($handle eq 'drag') {
             $item->{is_editing} = 0;
@@ -11018,6 +11930,24 @@ sub select_item {
             start_cursor_blink();
         }
     }
+    
+    if ($item->{type} eq 'note') {
+        if ($handle eq 'icon') {
+            if (!$item->{is_open}) {
+                $item->{is_open} = 1;
+                $item->{is_editing} = 1;
+                $is_text_editing = 1;
+                start_cursor_blink();
+            }
+        } elsif ($handle eq 'callout') {
+            if (!$item->{is_editing}) {
+                $item->{is_editing} = 1;
+                $is_text_editing = 1;
+                start_cursor_blink();
+            }
+        }
+        $drawing_area->grab_focus();
+    }
 
     $drawing_area->grab_focus();
     $drawing_area->queue_draw();
@@ -11026,11 +11956,17 @@ sub select_item {
 }
 
 sub deselect_all_items {
-    foreach my $type (qw(lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines numbered-circles text_items svg_items magnifiers pixelize_items)) {
+    foreach my $type (qw(lines dashed-lines arrows rectangles ellipses triangles tetragons pentagons pyramids cuboids freehand-items highlighter-lines numbered-circles notes text_items svg_items magnifiers pixelize_items)) {
         next unless exists $items{$type} && defined $items{$type};
         foreach my $item (@{$items{$type}}) {
             if ($item->{type} eq 'text' && $item->{is_editing}) {
                 cleanup_text_editing($item);
+            }
+            if ($item->{type} eq 'note' && $item->{is_editing}) {
+                $item->{is_editing} = 0;
+                $item->{is_open} = 0;
+                $is_text_editing = 0;
+                stop_cursor_blink();
             }
             $item->{selected} = 0;
             $item->{selection_order} = undef;
@@ -11077,6 +12013,7 @@ sub get_array_type {
         'freehand' => 'freehand-items',
         'highlighter' => 'highlighter-lines',
         'text' => 'text_items',
+        'note' => 'notes',
         'numbered-circle' => 'numbered-circles',
         'magnifier' => 'magnifiers',
         'pixelize' => 'pixelize_items',
@@ -11313,6 +12250,7 @@ sub clear_all_annotations {
         'freehand-items' => [],
         'highlighter-lines' => [],
         'numbered-circles' => [],
+        'notes' => [],
         'text_items' => [],
         'magnifiers' => [],
         'pixelize_items' => [],
@@ -11378,7 +12316,6 @@ sub cleanup_text_editing {
     return;
 }
 
-# Layer Management:
 
 sub raise_to_top {
     my ($item) = @_;
@@ -11616,8 +12553,7 @@ sub do_undo {
                 undef $preview_surface;
                 $preview_ratio = 1.0;
             }
-            
-            $scale_factor = 1.0;
+
             zoom_fit_best();
         }
     }
@@ -11807,7 +12743,6 @@ sub restore_original_state {
     return;
 }
 
-# Printing:
 
 sub on_begin_print {
     my ($print_operation, $context) = @_;
