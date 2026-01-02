@@ -32,97 +32,21 @@
        apply_with_radius="true"
        only_selected="false"
        hide_knots="false" />
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter3"
-       x="-0.052401306"
-       y="-0.040837782"
-       width="1.1086558"
-       height="1.0920421">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="1.000000"
-         flood-color="rgb(170,170,170)"
-         id="feFlood2" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="0.200000"
-         id="feGaussianBlur2" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="0.200000"
-         dy="0.400000"
-         id="feOffset2" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite2" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite3" />
-    </filter>
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter5"
-       x="-0.035425392"
-       y="-0.041711005"
-       width="1.0783841"
-       height="1.09147">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="1.000000"
-         flood-color="rgb(170,170,170)"
-         id="feFlood3" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="0.200000"
-         id="feGaussianBlur3" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="0.200000"
-         dy="0.400000"
-         id="feOffset3" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite4" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite5" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#ffffff"
+     pagecolor="#5d5d5d"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
      inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
+     inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="10.659634"
-     inkscape:cx="21.154572"
-     inkscape:cy="14.306307"
-     inkscape:window-width="1920"
-     inkscape:window-height="978"
+     inkscape:zoom="21.319268"
+     inkscape:cx="8.0678191"
+     inkscape:cy="14.259401"
+     inkscape:window-width="2481"
+     inkscape:window-height="1369"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -132,33 +56,46 @@
      inkscape:label="Image"
      id="g1">
     <g
-       id="g3">
-      <g
-         id="g7"
-         transform="matrix(0.22975407,0.22395064,-0.22395064,0.22975407,13.395308,-8.0783132)"
-         style="stroke:#000000;stroke-width:2.87055;stroke-dasharray:none;stroke-opacity:1">
-        <path
-           id="path5"
-           style="fill:none;stroke:#000000;stroke-width:2.87055;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-           inkscape:transform-center-x="-3.1770709"
-           inkscape:transform-center-y="-2.1153513"
-           d="M 63.404969,77.873281 59.053139,91.055666 54.471502,103.41343 49.240672,91.086485 44.07375,77.934 53.739093,77.818809 Z"
-           sodipodi:nodetypes="ccccccc" />
-        <path
-           id="rect6"
-           style="fill:none;stroke:#000000;stroke-width:2.87055;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-           d="m 43.939417,24.589091 c 5.88624,-0.0089 11.467765,-0.10647 19.70927,-0.03555 l -0.135188,49.657056 -19.615459,0.03555 z"
-           sodipodi:nodetypes="ccccc" />
-        <path
-           id="path7"
-           style="fill:none;stroke:#000000;stroke-width:2.87055;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-           d="m 44.08603,3.143631 c 5.884487,-0.1439452 11.368292,0.1760691 19.609258,0.057857 l -0.06732,17.299185 -19.515444,0.03595 z"
-           sodipodi:nodetypes="ccccc" />
-      </g>
+       id="g2">
+      <rect
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.910523;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+         id="rect5"
+         width="27.928478"
+         height="2.1663694"
+         x="2.0459101"
+         y="28.192532" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:0.921;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         d="m 2.1576726,29.363109 26.5487534,0.09381"
-         id="path3" />
+         id="path5-1"
+         style="fill:none;stroke:#000000;stroke-width:0.540423;stroke-linecap:square;stroke-opacity:1;paint-order:fill markers stroke"
+         inkscape:transform-center-x="-3.1770709"
+         inkscape:transform-center-y="-2.1153513"
+         d="m 10.943623,22.903001 -3.9520545,2.054112 -3.8201789,1.813186 1.5588227,-4.003614 1.7583861,-4.178972 2.246449,2.138094 z"
+         sodipodi:nodetypes="ccccccc" />
+      <path
+         id="rect6-2"
+         style="fill:none;stroke:#000000;stroke-width:0.595932;stroke-linecap:square;stroke-opacity:1;paint-order:fill markers stroke"
+         d="m 18.404361,6.3014184 c 1.354381,1.3161824 2.65861,2.5437514 4.536247,4.4057366 L 11.788818,22.08579 7.2741253,17.701063 Z"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         id="path7-7"
+         style="fill:none;stroke:#000000;stroke-width:0.595932;stroke-linecap:square;stroke-opacity:1;paint-order:fill markers stroke"
+         d="m 23.240771,1.4070708 c 1.384221,1.2847626 2.57248,2.5863888 4.492349,4.4047987 l -3.88963,3.959482 -4.491804,-4.3622367 z"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         id="rect1"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.02453;stroke-linecap:square;stroke-linejoin:miter;stroke-opacity:1;paint-order:markers stroke fill"
+         d="m 18.394199,6.4712512 1.603232,1.7432323 -5.5721,5.5951455 -5.290665,5.360616 -1.7428501,-1.559963 5.8295331,-5.686779 z"
+         sodipodi:nodetypes="ccccccc" />
+      <path
+         id="path1"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.391713;stroke-linecap:square;stroke-linejoin:miter;stroke-opacity:1;paint-order:markers stroke fill"
+         d="M 23.236819,1.7101013 25.264028,3.3899711 23.252893,5.3263492 21.287181,7.3084831 19.513529,5.2814476 21.307038,3.4042627 Z"
+         sodipodi:nodetypes="ccccccc" />
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.049;stroke-linecap:square;stroke-linejoin:miter;stroke-opacity:1;paint-order:markers stroke fill"
+         d="m 4.6420691,23.515639 1.7355193,1.641707 -3.0488852,1.594802 z"
+         id="path2"
+         sodipodi:nodetypes="cccc" />
     </g>
   </g>
 </svg>

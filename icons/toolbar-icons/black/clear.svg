@@ -148,48 +148,10 @@
          y="9.8175793"
          ry="0" />
     </clipPath>
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter18"
-       x="-0.22902568"
-       y="-0.16075415"
-       width="1.4882359"
-       height="1.406255">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="1.000000"
-         flood-color="rgb(170,170,170)"
-         id="feFlood17" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="0.100000"
-         id="feGaussianBlur17" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="0.100000"
-         dy="0.400000"
-         id="feOffset17" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite17" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite18" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#ffffff"
+     pagecolor="#717171"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
@@ -197,12 +159,12 @@
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="17.864179"
-     inkscape:cx="10.215975"
-     inkscape:cy="17.241207"
-     inkscape:window-width="1920"
-     inkscape:window-height="945"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:cx="11.587434"
+     inkscape:cy="17.185229"
+     inkscape:window-width="1923"
+     inkscape:window-height="1195"
+     inkscape:window-x="26"
+     inkscape:window-y="23"
      inkscape:window-maximized="0"
      inkscape:current-layer="g1"
      showgrid="false">
@@ -236,69 +198,77 @@
          x="4.2454391"
          y="29.983418" /></text>
     <path
-       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.864;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:markers stroke fill"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.26402;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:markers stroke fill"
        d="M 25.637724,3.3091434 16.271555,16.538693"
        id="path30" />
     <path
-       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.955;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:markers stroke fill"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.25538;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:0.992157;paint-order:markers stroke fill"
        d="M 8.4467747,11.233528 24.905709,22.877015"
        id="path32" />
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.54;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       d="M 7.159282,11.625374 23.618216,23.268861"
+       id="path33" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.848;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.99215698;paint-order:markers stroke fill"
+       d="M 26.744472,2.1845958 17.377448,15.414295"
+       id="path31" />
     <g
-       id="g46"
-       transform="matrix(0.77445924,0.54359648,-0.37061929,0.52801949,11.911409,-1.5639137)"
-       style="stroke:#000000;stroke-width:0.615657;stroke-dasharray:none;stroke-opacity:1">
+       id="g35"
+       transform="matrix(0.77445924,0.54359648,-0.37061929,0.52801949,10.098416,-0.33629335)"
+       style="stroke:#000000;stroke-opacity:1">
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.993011;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 26.460823,21.723763 v 8.82101"
-         id="path35" />
+         id="path34" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 4.4971873,21.66171 v 8.838812"
-         id="path36" />
+         id="path34-3" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.995013;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 6.5158888,21.642914 v 8.856613"
-         id="path37" />
+         id="path34-9" />
       <g
-         id="g38"
-         style="stroke:#000000;stroke-width:0.615657;stroke-dasharray:none;stroke-opacity:1">
+         id="g34"
+         style="stroke:#000000;stroke-opacity:1">
         <path
-           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.996012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            d="m 8.5147992,21.643909 v 8.874414"
-           id="path38" />
+           id="path34-0" />
       </g>
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.993011;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 10.51371,21.680507 v 8.82101"
-         id="path39" />
+         id="path34-4" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 12.473037,21.681501 v 8.838812"
-         id="path40" />
+         id="path34-5" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 14.491738,21.66171 v 8.838812"
-         id="path41" />
+         id="path34-38" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 16.510441,21.681502 v 8.838812"
-         id="path42" />
+         id="path34-7" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 18.48956,21.681502 v 8.838812"
-         id="path43" />
+         id="path34-36" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.994012;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 20.468679,21.681502 v 8.838812"
-         id="path44" />
+         id="path34-39" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.993011;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 22.507171,21.700298 v 8.82101"
-         id="path45" />
+         id="path34-90" />
       <path
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.615657;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.992008;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          d="m 24.48956,21.726265 v 8.803209"
-         id="path46" />
+         id="path34-57" />
     </g>
   </g>
 </svg>
